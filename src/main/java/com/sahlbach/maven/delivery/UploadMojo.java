@@ -1,17 +1,25 @@
 package com.sahlbach.maven.delivery;
 
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.sonatype.aether.RepositorySystem;
+import org.sonatype.aether.RepositorySystemSession;
+import org.sonatype.aether.artifact.Artifact;
+import org.sonatype.aether.repository.RemoteRepository;
+import org.sonatype.aether.resolution.ArtifactRequest;
+import org.sonatype.aether.resolution.ArtifactResolutionException;
+import org.sonatype.aether.resolution.ArtifactResult;
+import org.sonatype.aether.util.artifact.DefaultArtifact;
+
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.factory.DefaultArtifactFactory;
-import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
-import org.apache.maven.artifact.resolver.ArtifactResolutionException;
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.sonatype.aether.impl.ArtifactResolver;
-
+/**
+ * @author Andreas Sahlbach
+ *         Date: 8/3/11
+ *         Time: 5:18 PM
+ */
 /**
  * Goal that uploads a couple of filesets to a specific server using
  * a specific transportation type. It doesn't bind to a life-cycle phase
@@ -29,89 +37,58 @@ public class UploadMojo extends AbstractMojo {
      */
     private List<Delivery> deliveries = Collections.emptyList();
 
-  /**
-    * Used to look up Artifacts in the remote repository.
-    *
-    * @Component(role=DefaultArtifactFactory.class)
-    * @required
-    * @readonly
-    */
-   protected DefaultArtifactFactory factory;
+    /**
+     * The entry point to Aether, i.e. the component doing all the work.
+     *
+     * @component
+     */
+    private RepositorySystem repoSystem;
 
-   /**
-    * Used to look up Artifacts in the remote repository.
-    *
-    * @parameter expression=
-    *  "${component.org.apache.maven.artifact.resolver.ArtifactResolver}"
-    * @required
-    * @readonly
-    */
-   protected ArtifactResolver artifactResolver;
+    /**
+     * The current repository/network configuration of Maven.
+     *
+     * @parameter default-value="${repositorySystemSession}"
+     * @readonly
+     */
+    private RepositorySystemSession repoSession;
 
-   /**
-    * List of Remote Repositories used by the resolver
-    *
-    * @parameter expression="${project.remoteArtifactRepositories}"
-    * @readonly
-    * @required
-    */
-   protected List remoteRepositories;
+    /**
+     * The project's remote repositories to use for the resolution.
+     *
+     * @parameter default-value="${project.remoteProjectRepositories}"
+     * @readonly
+     */
+    private List<RemoteRepository> remoteRepos;
 
-   /**
-    * Location of the local repository.
-    *
-    * @parameter expression="${localRepository}"
-    * @readonly
-    * @required
-    */
-   protected ArtifactRepository localRepository;
 
-   /**
-    * The target pom's artifactId
-    *
-    * @parameter expression="${bootstrapArtifactId}"
-    * @required
-    */
-   private String bootstrapArtifactId;
-
-   /**
-    * The target pom's groupId
-    *
-    * @parameter expression="${bootstrapGroupId}"
-    * @required
-    */
-   private String bootstrapGroupId;
-
-   /**
-    * The target pom's type
-    *
-    * @parameter expression="${bootstrapType}"
-    * @required
-    */
-   private String bootstrapType;
-
-   /**
-    * The target pom's version
-    *
-    * @parameter expression="${bootstrapVersion}"
-    * @required
-    */
-   private String bootstrapVersion;
-
-    public void execute() throws MojoExecutionException {
+    public void execute() throws MojoExecutionException, MojoFailureException {
 
         for (Delivery delivery : deliveries) {
 
-            try {
-                Artifact pomArtifact = this.factory.createArtifact(
-                    bootstrapGroupId, bootstrapArtifactId, bootstrapVersion,
-                    "", bootstrapType);
+            for (DeliveryArtifact deliveryArtifact : delivery.getArtifacts()) {
+                Artifact artifact;
+                try {
+                    artifact = new DefaultArtifact( deliveryArtifact.toString() );
+                }
+                catch ( IllegalArgumentException e ) {
+                    throw new MojoFailureException( e.getMessage(), e );
+                }
+                ArtifactRequest request = new ArtifactRequest();
+                request.setArtifact( artifact );
+                request.setRepositories( remoteRepos );
 
-                artifactResolver.resolveArtifact(pomArtifact, this.remoteRepositories, this.localRepository);
-            } catch (ArtifactResolutionException e) {
-                getLog().error("can't resolve parent pom", e);
-            } catch (ArtifactNotFoundException e) {
-                getLog().error("can't resolve parent pom", e);
+                getLog().debug( "Resolving artifact " + artifact + " from " + remoteRepos );
+
+                ArtifactResult result;
+                try {
+                    result = repoSystem.resolveArtifact( repoSession, request );
+                }
+                catch ( ArtifactResolutionException e ) {
+                    throw new MojoExecutionException( e.getMessage(), e );
+                }
+                getLog().info( "Resolved artifact " + artifact + " to " + result.getArtifact().getFile() + " from "
+                               + result.getRepository() );
+                
             }
         }
     }
