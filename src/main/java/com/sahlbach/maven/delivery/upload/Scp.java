@@ -1,4 +1,4 @@
-package com.sahlbach.maven.delivery.uploader;
+package com.sahlbach.maven.delivery.upload;
 
 /*
  *  Licensed to the Apache Software Foundation (ASF) under one or more

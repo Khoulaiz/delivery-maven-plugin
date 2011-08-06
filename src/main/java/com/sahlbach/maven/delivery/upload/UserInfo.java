@@ -1,9 +1,14 @@
-package com.sahlbach.maven.delivery.uploader;
+package com.sahlbach.maven.delivery.upload;
 
 public class UserInfo implements com.jcraft.jsch.UserInfo {
 
     String user;
     String password;
+
+    public UserInfo(String user, String password) {
+        this.user = user;
+        this.password = password;
+    }
 
     public UserInfo(String userInfo) {
         String tmp[] = userInfo.split(":");

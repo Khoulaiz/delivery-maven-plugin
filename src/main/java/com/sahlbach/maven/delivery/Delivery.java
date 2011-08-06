@@ -1,6 +1,5 @@
 package com.sahlbach.maven.delivery;
 
-import java.net.URI;
 import java.util.List;
 
 /**
@@ -11,33 +10,31 @@ import java.util.List;
 public class Delivery {
 
     /**
-     * Target URI of this delivery;
-     * @parameter expression="file:///${project.output.dir}"
+     * id of this job for reference
+     * @parameter
      * @required
      */
-    private URI target;
+    private String id;
 
     /**
-     * A list of artifactCoords like this {@code <groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>}
-     *
+     * ordered list of DeliveryJobs for this Delivery
      * @parameter
      */
-    private List<DeliveryArtifact> artifacts;
+    private List<Job> jobs;
 
-
-    public URI getTarget() {
-        return target;
+    public String getId () {
+        return id;
     }
 
-    public void setTarget(URI target) {
-        this.target = target;
+    public void setId (String id) {
+        this.id = id;
     }
 
-    public List<DeliveryArtifact> getArtifacts () {
-        return artifacts;
+    public List<Job> getJobs () {
+        return jobs;
     }
 
-    public void setArtifacts (List<DeliveryArtifact> artifacts) {
-        this.artifacts = artifacts;
+    public void setJobs (List<Job> jobs) {
+        this.jobs = jobs;
     }
 }

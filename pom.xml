@@ -4,7 +4,7 @@
   <groupId>com.sahlbach.maven</groupId>
   <artifactId>delivery-maven-plugin</artifactId>
   <packaging>maven-plugin</packaging>
-  <version>0.1-SNAPSHOT</version>
+  <version>0.2-SNAPSHOT</version>
   <name>delivery-maven-plugin</name>
   <url>http://maven.apache.org</url>
   <properties>
@@ -44,37 +44,4 @@
     <url>scm:git:git@github.com:khoulaiz/delivery-maven-plugin.git</url>
     <developerConnection>scm:git:git@github.com:khoulaiz/delivery-maven-plugin.git</developerConnection>
   </scm>
-  <profiles>
-    <profile>
-      <id>test</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>com.sahlbach.maven</groupId>
-            <artifactId>delivery-maven-plugin</artifactId>
-            <version>${project.version}</version>
-            <configuration>
-              <deliveries>
-                <delivery>
-                  <target>${testTargetUrl}</target>
-                  <artifacts>
-                    <artifact>
-                      <groupId>org.sonatype.aether</groupId>
-                      <artifactId>aether-util</artifactId>
-                      <version>1.12</version>
-                    </artifact>
-                    <artifact>
-                      <groupId>com.sahlbach.maven</groupId>
-                      <artifactId>delivery-maven-plugin</artifactId>
-                      <version>0.1-SNAPSHOT</version>
-                    </artifact>
-                  </artifacts>
-                </delivery>
-              </deliveries>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 </project>

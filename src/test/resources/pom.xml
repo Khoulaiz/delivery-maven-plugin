@@ -1,0 +1,43 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.sahlbach.maven</groupId>
+  <artifactId>test</artifactId>
+  <packaging>pom</packaging>
+  <version>0.2-SNAPSHOT</version>
+  <name>test</name>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.sahlbach.maven</groupId>
+        <artifactId>delivery-maven-plugin</artifactId>
+        <version>0.2-SNAPSHOT</version>
+        <configuration>
+          <deliveries>
+            <delivery>
+              <id>test</id>
+              <jobs>
+                <job>
+                  <upload>
+                    <type>scp</type>
+                    <server>${testServer}</server>
+                    <targetDir>${testPath}</targetDir>
+                    <username>${testUser}</username>
+                    <userPassword>${testPassword}</userPassword>
+                    <artifacts>
+                      <artifact>
+                        <groupId>org.sonatype.aether</groupId>
+                        <artifactId>aether-util</artifactId>
+                        <version>1.12</version>
+                      </artifact>
+                    </artifacts>
+                  </upload>
+                </job>
+              </jobs>
+            </delivery>
+          </deliveries>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

@@ -1,10 +1,10 @@
-package com.sahlbach.maven.delivery.uploader;
+package com.sahlbach.maven.delivery.upload;
 
+import com.sahlbach.maven.delivery.Upload;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
 
 import java.io.File;
-import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 
@@ -28,23 +28,23 @@ public abstract class Uploader {
 //        uploaderMap.put("file://", FileUploader.class);
     }
 
-    public static Uploader createUploader(String scheme, Log logger) {
-        Class<? extends Uploader> uploaderClass = uploaderMap.get(scheme.toLowerCase());
+    public static Uploader createUploader(String type, Log logger) {
+        Class<? extends Uploader> uploaderClass = uploaderMap.get(type);
         Uploader uploader = null;
         if(uploaderClass != null) {
             try {
                 uploader = uploaderClass.newInstance();
                 uploader.setLogger(logger);
             } catch (InstantiationException e) {
-                logger.error("Can't find Uploader for scheme "+scheme);
+                logger.error("Can't create Uploader of type "+ type);
             } catch (IllegalAccessException e) {
-                logger.error("Can't find Uploader for scheme " + scheme);
+                logger.error("Can't create Uploader of type " + type);
             }
         }
         return uploader;
     }
 
-    public abstract void uploadFiles (List<File> filesToUpload, URI target) throws MojoFailureException;
+    public abstract void uploadFiles (List<File> filesToUpload, String targetPath, Upload upload) throws MojoFailureException;
 
     public Log getLogger () {
         return logger;
