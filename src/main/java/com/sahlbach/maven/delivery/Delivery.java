@@ -1,6 +1,6 @@
 package com.sahlbach.maven.delivery;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.List;
 
 /**
@@ -11,11 +11,11 @@ import java.util.List;
 public class Delivery {
 
     /**
-     * Target URL of this delivery;
-     * @parameter expression="${project.output.dir}"
+     * Target URI of this delivery;
+     * @parameter expression="file:///${project.output.dir}"
      * @required
      */
-    private URL target;
+    private URI target;
 
     /**
      * A list of artifactCoords like this {@code <groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>}
@@ -25,11 +25,11 @@ public class Delivery {
     private List<DeliveryArtifact> artifacts;
 
 
-    public URL getTarget() {
+    public URI getTarget() {
         return target;
     }
 
-    public void setTarget(URL target) {
+    public void setTarget(URI target) {
         this.target = target;
     }
 

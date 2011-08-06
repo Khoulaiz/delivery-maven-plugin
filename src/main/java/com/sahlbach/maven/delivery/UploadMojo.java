@@ -1,5 +1,6 @@
 package com.sahlbach.maven.delivery;
 
+import com.sahlbach.maven.delivery.uploader.Uploader;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -12,6 +13,8 @@ import org.sonatype.aether.resolution.ArtifactResolutionException;
 import org.sonatype.aether.resolution.ArtifactResult;
 import org.sonatype.aether.util.artifact.DefaultArtifact;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -26,7 +29,6 @@ import java.util.List;
  * per default
  *
  * @goal upload
- * @requiresDirectInvocation true
  *
  */
 public class UploadMojo extends AbstractMojo {
@@ -65,6 +67,12 @@ public class UploadMojo extends AbstractMojo {
 
         for (Delivery delivery : deliveries) {
 
+            Uploader uploader = Uploader.createUploader(delivery.getTarget().getScheme(), getLog());
+            if(uploader == null) {
+                throw new MojoExecutionException("Can't find Uploader for url "+delivery.getTarget());
+            }
+            List<File> filesToUpload = new ArrayList<File>(delivery.getArtifacts().size());
+
             for (DeliveryArtifact deliveryArtifact : delivery.getArtifacts()) {
                 Artifact artifact;
                 try {
@@ -88,8 +96,9 @@ public class UploadMojo extends AbstractMojo {
                 }
                 getLog().info( "Resolved artifact " + artifact + " to " + result.getArtifact().getFile() + " from "
                                + result.getRepository() );
-                
+                filesToUpload.add(result.getArtifact().getFile());
             }
+            uploader.uploadFiles(filesToUpload,delivery.getTarget());
         }
     }
 }
