@@ -6,7 +6,7 @@ import com.sahlbach.maven.delivery.Upload;
 import org.apache.maven.plugin.MojoFailureException;
 
 import java.io.File;
-import java.util.List;
+import java.util.Map;
 
 /**
  * User: Andreas Sahlbach
@@ -16,7 +16,7 @@ import java.util.List;
 public class ScpUploader extends Uploader {
 
     @Override
-    public void uploadFiles (List<File> filesToUpload, String targetDir, Upload upload) throws MojoFailureException {
+    public void uploadFiles (Map<File,String> filesToUpload, String targetDir, Upload upload) throws MojoFailureException {
 
         Session session = null;
         try {
@@ -31,13 +31,14 @@ public class ScpUploader extends Uploader {
             session.connect();
             Scp scp = new Scp(session);
 
-            for (File file : filesToUpload) {
-                getLogger().debug("Delivering file "+file.getAbsolutePath());
-                scp.put(file.getAbsolutePath(),targetDir,file.getName(), upload.getFileMask());
+            for (Map.Entry<File, String> copyEntry : filesToUpload.entrySet()) {
+                getLogger().debug("Delivering file " + copyEntry.getKey().getAbsolutePath());
+                scp.put(copyEntry.getKey().getAbsolutePath(),targetDir,copyEntry.getValue(), upload.getFileMask());
                 if(getLogger().isDebugEnabled()) {
-                    getLogger().info("Delivered: "+file.getAbsolutePath()+" to "+host+":"+targetDir);
+                    getLogger().info("Delivered: " + copyEntry.getKey().getAbsolutePath()+" to " + host + ":"
+                                     + targetDir + "/"+copyEntry.getValue());
                 } else {
-                    getLogger().info("Delivered: "+file.getName());
+                    getLogger().info("Delivered: " + copyEntry.getKey().getName());
                 }
             }
 

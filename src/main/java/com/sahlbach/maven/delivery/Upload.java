@@ -11,7 +11,10 @@ import org.sonatype.aether.util.artifact.DefaultArtifact;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
 
 /**
  * User: Andreas Sahlbach
@@ -88,6 +91,13 @@ public class Upload {
      */
     private String fileMask;
 
+    /**
+     * Optional list of regexp to rename files during copy. The first regexp that matches will be used to rename the
+     * file. The file path is excluding of this operation and the regexp match attempt.
+     * @parameter
+     */
+    private List<RenameRegexp> renameRegexps;
+
     public void execute (DeliveryMojo mojo) throws MojoExecutionException, MojoFailureException {
         Uploader uploader = Uploader.createUploader(type.toLowerCase(), mojo.getLog());
         if(uploader == null) {
@@ -98,7 +108,25 @@ public class Upload {
         if(artifacts != null)
             filesToUpload.addAll(resolveArtifacts(mojo));
 
-        uploader.uploadFiles(filesToUpload, targetDir,this);
+        Map<File,String> filesWithTargetNames = calculateTagetNames(filesToUpload);
+
+        uploader.uploadFiles(filesWithTargetNames, targetDir,this);
+    }
+
+    private Map<File,String> calculateTagetNames (List<File> filesToUpload) {
+        Map<File,String> filesWithTargetNames = new HashMap<File, String>(filesToUpload.size());
+        for (File file : filesToUpload) {
+            for (RenameRegexp renameRegexp : renameRegexps) {
+                Matcher matcher = renameRegexp.getFromPattern().matcher(file.getName());
+                if(matcher.matches()) {
+                    filesWithTargetNames.put(file,matcher.replaceAll(renameRegexp.getTo()));
+                    break;
+                } else {
+                    filesWithTargetNames.put(file,file.getName());
+                }
+            }
+        }
+        return filesWithTargetNames;
     }
 
     public List<File> resolveArtifacts(DeliveryMojo mojo) throws MojoFailureException, MojoExecutionException {
@@ -140,8 +168,8 @@ public class Upload {
             includedFiles = fileset.getIncludedFiles();
         }
         List<File> result = new ArrayList<File>(includedFiles.length);
-        for ( int j = 0; j < includedFiles.length; j++ ) {
-            result.add(new File(fileset.getBasedir(), includedFiles[j]));
+        for (String includedFile : includedFiles) {
+            result.add(new File(fileset.getBasedir(), includedFile));
         }
         return result;
     }
@@ -188,5 +216,13 @@ public class Upload {
 
     public String getServer () {
         return server;
+    }
+
+    public List<RenameRegexp> getRenameRegexps () {
+        return renameRegexps;
+    }
+
+    public void setRenameRegexps (List<RenameRegexp> renameRegexps) {
+        this.renameRegexps = renameRegexps;
     }
 }

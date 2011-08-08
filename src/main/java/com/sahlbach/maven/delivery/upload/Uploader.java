@@ -6,7 +6,7 @@ import org.apache.maven.plugin.logging.Log;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Map;
 
 /**
  * User: Andreas Sahlbach
@@ -44,7 +44,7 @@ public abstract class Uploader {
         return uploader;
     }
 
-    public abstract void uploadFiles (List<File> filesToUpload, String targetPath, Upload upload) throws MojoFailureException;
+    public abstract void uploadFiles (Map<File,String> filesToUpload, String targetPath, Upload upload) throws MojoFailureException;
 
     public Log getLogger () {
         return logger;

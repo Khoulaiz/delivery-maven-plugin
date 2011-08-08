@@ -24,6 +24,16 @@
                     <targetDir>${testPath}</targetDir>
                     <username>${testUser}</username>
                     <userPassword>${testPassword}</userPassword>
+                    <renameRegexps>
+                      <renameRegexp>
+                        <from>jojo</from>
+                        <to>toto</to>
+                      </renameRegexp>
+                      <renameRegexp>
+                        <from>(.*)-([0-9\.]*).jar</from>
+                        <to>$1.jar</to>
+                      </renameRegexp> 
+                    </renameRegexps>
                     <artifacts>
                       <artifact>
                         <groupId>org.sonatype.aether</groupId>
