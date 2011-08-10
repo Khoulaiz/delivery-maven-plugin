@@ -1,0 +1,6 @@
+<project name="delivery-maven-plugin">
+
+  <body>
+    <menu ref="reports"/>
+  </body>
+</project>
