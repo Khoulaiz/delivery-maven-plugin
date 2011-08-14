@@ -37,11 +37,9 @@ public class Job {
     private Exec exec;
 
     public void execute(DeliveryMojo mojo) throws MojoExecutionException, MojoFailureException {
-        if(upload != null && exec != null)
-            throw new MojoExecutionException("Job must either be exec or upload.");
         if(upload != null)
             upload.execute(mojo);
-        else
+        if(exec != null)
             exec.execute(mojo);
     }
 }

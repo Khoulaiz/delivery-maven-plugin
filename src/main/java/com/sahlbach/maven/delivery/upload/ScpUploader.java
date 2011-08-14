@@ -20,6 +20,8 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
 import com.sahlbach.maven.delivery.Upload;
 import org.apache.maven.plugin.MojoFailureException;
+import org.codehaus.plexus.util.StringUtils;
+import org.codehaus.plexus.util.cli.Commandline;
 
 import java.io.File;
 import java.util.Map;
@@ -32,11 +34,46 @@ import java.util.Map;
 public class ScpUploader extends Uploader {
 
     @Override
-    public void uploadFiles (Map<File,String> filesToUpload, String targetDir, Upload upload) throws MojoFailureException {
+    public void uploadFiles (Map<File, String> filesToUpload, String targetDir, Upload upload)
+        throws MojoFailureException {
 
+        if (StringUtils.isNotEmpty(upload.getExecutable())) {
+            externalUpload(filesToUpload, targetDir, upload);
+        } else {
+            internalUpload(filesToUpload, targetDir, upload);
+        }
+    }
+
+    private void externalUpload (Map<File, String> filesToUpload, String targetDir, Upload upload) {
+        for (Map.Entry<File, String> copyEntry : filesToUpload.entrySet()) {
+            getLogger().debug("Delivering file " + copyEntry.getKey().getAbsolutePath());
+            Commandline cmd = new Commandline();
+
+            cmd.setExecutable(upload.getExecutable());
+
+            if (upload.getPort() != 0) {
+                cmd.createArg().setValue("-P");
+                cmd.createArg().setValue(Integer.toString(upload.getPort()));
+            }
+
+            cmd.createArg().setFile(copyEntry.getKey());
+            cmd.createArg().setValue(upload.getServer() + ":" + targetDir + "/" + copyEntry.getValue());
+
+            if (getLogger().isDebugEnabled()) {
+                getLogger().info(
+                    "Delivered: " + copyEntry.getKey().getAbsolutePath() + " to " + upload.getServer() + ":"
+                    + targetDir + "/" + copyEntry.getValue());
+            } else {
+                getLogger().info("Delivered: " + copyEntry.getKey().getName());
+            }
+        }
+    }
+
+    private void internalUpload (Map<File, String> filesToUpload, String targetDir, Upload upload)
+        throws MojoFailureException {
         Session session = null;
         try {
-            UserInfo userInfo = new UserInfo(upload.getUsername(),upload.getUserPassword());
+            UserInfo userInfo = new UserInfo(upload.getUsername(), upload.getUserPassword());
             String host = upload.getServer();
             int port = upload.getPort() == 0 ? 22 : upload.getPort();
 
@@ -49,10 +86,10 @@ public class ScpUploader extends Uploader {
 
             for (Map.Entry<File, String> copyEntry : filesToUpload.entrySet()) {
                 getLogger().debug("Delivering file " + copyEntry.getKey().getAbsolutePath());
-                scp.put(copyEntry.getKey().getAbsolutePath(),targetDir,copyEntry.getValue(), upload.getFileMask());
-                if(getLogger().isDebugEnabled()) {
-                    getLogger().info("Delivered: " + copyEntry.getKey().getAbsolutePath()+" to " + host + ":"
-                                     + targetDir + "/"+copyEntry.getValue());
+                scp.put(copyEntry.getKey().getAbsolutePath(), targetDir, copyEntry.getValue(), upload.getFileMask());
+                if (getLogger().isDebugEnabled()) {
+                    getLogger().info("Delivered: " + copyEntry.getKey().getAbsolutePath() + " to " + host + ":"
+                                     + targetDir + "/" + copyEntry.getValue());
                 } else {
                     getLogger().info("Delivered: " + copyEntry.getKey().getName());
                 }
@@ -60,11 +97,12 @@ public class ScpUploader extends Uploader {
 
             session.disconnect();
             session = null;
-        } catch(Exception e){
-            throw new MojoFailureException("SCP failed.",e);
+        } catch (Exception e) {
+            throw new MojoFailureException("SCP failed.", e);
         } finally {
-            if(session != null)
+            if (session != null) {
                 session.disconnect();
+            }
         }
     }
 }

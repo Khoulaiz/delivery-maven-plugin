@@ -47,6 +47,12 @@ public class Upload {
     private String type;
 
     /**
+     * if set, use this executable as external program for the upload
+     * @parameter 
+     */
+    private String executable;
+
+    /**
      * target directory on the remote server
      * @parameter
      * @required
@@ -103,6 +109,10 @@ public class Upload {
 
     /**
      * File mask to use for copied files. Default is 0644
+     * (only works if no executable is defined. in case you want to use an external executable, you
+     * need to setup ssh so that the file mask fits automagically or you need to correct the mask
+     * via ssh yourself with an exec job)
+     *
      * @parameter default-value="0644"
      */
     private String fileMask;
@@ -240,5 +250,13 @@ public class Upload {
 
     public void setRenameRegexps (List<RenameRegexp> renameRegexps) {
         this.renameRegexps = renameRegexps;
+    }
+
+    public String getExecutable () {
+        return executable;
+    }
+
+    public void setExecutable (String executable) {
+        this.executable = executable;
     }
 }

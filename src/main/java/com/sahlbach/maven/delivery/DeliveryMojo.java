@@ -39,6 +39,13 @@ import java.util.List;
  *
  */
 public class DeliveryMojo extends AbstractMojo {
+     /*
+      * Skip doing the delivery
+	  *
+	  * @parameter expression="${delivery.skip}" default-value="false"
+	  */
+     private boolean skip = false;
+
     /**
      * List of deliveries of this mojo
      * @parameter
@@ -78,6 +85,9 @@ public class DeliveryMojo extends AbstractMojo {
 
 
     public void execute() throws MojoExecutionException, MojoFailureException {
+        
+        if(skip)
+            return;
 
         List<String> deliveriesToExecute = null;
 
@@ -99,11 +109,47 @@ public class DeliveryMojo extends AbstractMojo {
         return repoSystem;
     }
 
+    public void setRepoSystem (RepositorySystem repoSystem) {
+        this.repoSystem = repoSystem;
+    }
+
     public RepositorySystemSession getRepoSession () {
         return repoSession;
     }
 
+    public void setRepoSession (RepositorySystemSession repoSession) {
+        this.repoSession = repoSession;
+    }
+
     public List<RemoteRepository> getRemoteRepos () {
         return remoteRepos;
+    }
+
+    public void setRemoteRepos (List<RemoteRepository> remoteRepos) {
+        this.remoteRepos = remoteRepos;
+    }
+
+    public boolean isSkip () {
+        return skip;
+    }
+
+    public void setSkip (boolean skip) {
+        this.skip = skip;
+    }
+
+    public List<Delivery> getDeliveries () {
+        return deliveries;
+    }
+
+    public void setDeliveries (List<Delivery> deliveries) {
+        this.deliveries = deliveries;
+    }
+
+    public String getDeliveryIds () {
+        return deliveryIds;
+    }
+
+    public void setDeliveryIds (String deliveryIds) {
+        this.deliveryIds = deliveryIds;
     }
 }
