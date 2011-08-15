@@ -33,6 +33,12 @@ public class Delivery {
     private String id;
 
     /**
+     * description of this delivery
+     * @parameter 
+     */
+    private String description;
+
+    /**
      * ordered list of DeliveryJobs for this Delivery
      * @parameter
      */

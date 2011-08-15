@@ -21,6 +21,7 @@ import com.jcraft.jsch.Session;
 import com.sahlbach.maven.delivery.Upload;
 import org.apache.maven.plugin.MojoFailureException;
 import org.codehaus.plexus.util.StringUtils;
+import org.codehaus.plexus.util.cli.CommandLineException;
 import org.codehaus.plexus.util.cli.Commandline;
 
 import java.io.File;
@@ -44,7 +45,8 @@ public class ScpUploader extends Uploader {
         }
     }
 
-    private void externalUpload (Map<File, String> filesToUpload, String targetDir, Upload upload) {
+    private void externalUpload (Map<File, String> filesToUpload, String targetDir, Upload upload)
+        throws MojoFailureException {
         for (Map.Entry<File, String> copyEntry : filesToUpload.entrySet()) {
             getLogger().debug("Delivering file " + copyEntry.getKey().getAbsolutePath());
             Commandline cmd = new Commandline();
@@ -58,6 +60,12 @@ public class ScpUploader extends Uploader {
 
             cmd.createArg().setFile(copyEntry.getKey());
             cmd.createArg().setValue(upload.getServer() + ":" + targetDir + "/" + copyEntry.getValue());
+
+            try {
+                cmd.execute();
+            } catch (CommandLineException e) {
+                throw new MojoFailureException("external SCP call failure",e);
+            }
 
             if (getLogger().isDebugEnabled()) {
                 getLogger().info(

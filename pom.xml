@@ -77,6 +77,7 @@
     <url>https://github.com/Khoulaiz/delivery-maven-plugin/issues</url>
   </issueManagement>
   <build>
+    <defaultGoal>install</defaultGoal>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -107,6 +108,22 @@
             </plugin>
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-surefire-report-plugin</artifactId>
+              <version>2.9</version>
+            </plugin>
+            <plugin>
+              <artifactId>maven-invoker-plugin</artifactId>
+              <version>1.5</version>
+              <reportSets>
+                <reportSet>
+                  <reports>
+                    <report>report</report>
+                  </reports>
+                </reportSet>
+              </reportSets>
+            </plugin>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-javadoc-plugin</artifactId>
               <version>2.6.1</version>
               <configuration>
@@ -115,6 +132,40 @@
             </plugin>
           </reportPlugins>
         </configuration>
+      </plugin>
+       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-plugin-plugin</artifactId>
+        <version>2.7</version>
+        <configuration>
+          <encoding>UTF-8</encoding>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-invoker-plugin</artifactId>
+        <version>1.5</version>
+        <configuration>
+          <goals>
+            <goal>delivery:delivery</goal>
+          </goals>
+          <debug>true</debug>
+          <detail>true</detail>
+          <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
+          <projectsDirectory>src/it</projectsDirectory>
+          <pomIncludes>
+            <pomInclude>**/pom.xml</pomInclude>
+          </pomIncludes>
+        </configuration>
+        <executions>
+          <execution>
+            <id>invoker tests</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
     <resources>

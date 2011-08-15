@@ -31,7 +31,7 @@
         <configuration>
           <deliveries>
             <delivery>
-              <id>test</id>
+              <id>test scp internal</id>
               <jobs>
                 <job>
                   <upload>
@@ -47,8 +47,37 @@
                       </renameRegexp>
                       <renameRegexp>
                         <from>(.*)-([0-9\.]*).jar</from>
-                        <to>$1.jar</to>
+                        <to>$1-1.jar</to>
                       </renameRegexp> 
+                    </renameRegexps>
+                    <artifacts>
+                      <artifact>
+                        <groupId>org.sonatype.aether</groupId>
+                        <artifactId>aether-util</artifactId>
+                        <version>1.12</version>
+                      </artifact>
+                    </artifacts>
+                  </upload>
+                </job>
+              </jobs>
+            </delivery>
+            <delivery>
+              <id>test scp external</id>
+              <description>Tests the upload using an externl scp</description>
+              <jobs>
+                <job>
+                  <upload>
+                    <type>scp</type>
+                    <executable>scp</executable>
+                    <server>${testServer}</server>
+                    <targetDir>${testPath}</targetDir>
+                    <username>${testUser}</username>
+                    <userPassword>${testPassword}</userPassword>
+                    <renameRegexps>
+                      <renameRegexp>
+                        <from>(.*)-([0-9\.]*).jar</from>
+                        <to>$1-2.jar</to>
+                      </renameRegexp>
                     </renameRegexps>
                     <artifacts>
                       <artifact>
