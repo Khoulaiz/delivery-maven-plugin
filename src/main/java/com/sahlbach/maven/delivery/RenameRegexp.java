@@ -16,47 +16,49 @@
 
 package com.sahlbach.maven.delivery;
 
-import java.util.List;
+import java.util.regex.Pattern;
 
 /**
- * @author Andreas Sahlbach
- *         Date: 8/3/11
- *         Time: 5:18 PM
+ * User: Andreas Sahlbach
+ * Date: 08.08.11
+ * Time: 21:39
  */
-public class Delivery {
+public class RenameRegexp {
 
     /**
-     * id of this job for reference
+     * Java Regular Expression that has to match the filename to rename it.
      * @parameter
      * @required
      */
-    private String id;
+    private String from;
+
+    private Pattern fromPattern;
 
     /**
-     * description of this delivery
-     * @parameter 
-     */
-    private String description;
-
-    /**
-     * ordered list of DeliveryJobs for this Delivery
+     * Replacement that is used if the regexp matches. You can use java capturing groups for replacement.
      * @parameter
+     * @required
      */
-    private List<Job> jobs;
+    private String to;
 
-    public String getId () {
-        return id;
+    public String getFrom () {
+        return from;
     }
 
-    public void setId (String id) {
-        this.id = id;
+    public void setFrom (String from) {
+        this.from = from;
+        this.fromPattern = Pattern.compile(from);
     }
 
-    public List<Job> getJobs () {
-        return jobs;
+    public String getTo () {
+        return to;
     }
 
-    public void setJobs (List<Job> jobs) {
-        this.jobs = jobs;
+    public void setTo (String to) {
+        this.to = to;
+    }
+
+    public Pattern getFromPattern () {
+        return fromPattern;
     }
 }

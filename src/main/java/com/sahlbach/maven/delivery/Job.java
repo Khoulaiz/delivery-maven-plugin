@@ -16,47 +16,32 @@
 
 package com.sahlbach.maven.delivery;
 
-import java.util.List;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 
 /**
- * @author Andreas Sahlbach
- *         Date: 8/3/11
- *         Time: 5:18 PM
+ * User: Andreas Sahlbach
+ * Date: 06.08.11
+ * Time: 09:56
  */
-public class Delivery {
+public class Job {
 
     /**
-     * id of this job for reference
      * @parameter
-     * @required
      */
-    private String id;
+    private Upload upload;
 
     /**
-     * description of this delivery
      * @parameter 
      */
-    private String description;
+    private Exec exec;
 
-    /**
-     * ordered list of DeliveryJobs for this Delivery
-     * @parameter
-     */
-    private List<Job> jobs;
-
-    public String getId () {
-        return id;
-    }
-
-    public void setId (String id) {
-        this.id = id;
-    }
-
-    public List<Job> getJobs () {
-        return jobs;
-    }
-
-    public void setJobs (List<Job> jobs) {
-        this.jobs = jobs;
+    public void execute(DeliveryMojo mojo) throws MojoExecutionException, MojoFailureException {
+        if(upload != null && exec != null)
+            throw new MojoExecutionException("Job must either be exec or upload.");
+        if(upload != null)
+            upload.execute(mojo);
+        else
+            exec.execute(mojo);
     }
 }
