@@ -16,16 +16,19 @@
 
 package com.sahlbach.maven.delivery.upload;
 
+import java.io.File;
+import java.util.Map;
+
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
 import com.sahlbach.maven.delivery.Upload;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.cli.CommandLineException;
+import org.codehaus.plexus.util.cli.CommandLineUtils;
 import org.codehaus.plexus.util.cli.Commandline;
-
-import java.io.File;
-import java.util.Map;
+import org.codehaus.plexus.util.cli.DefaultConsumer;
 
 /**
  * User: Andreas Sahlbach
@@ -35,8 +38,7 @@ import java.util.Map;
 public class ScpUploader extends Uploader {
 
     @Override
-    public void uploadFiles (Map<File, String> filesToUpload, String targetDir, Upload upload)
-        throws MojoFailureException {
+    public void uploadFiles (Map<File, String> filesToUpload, String targetDir, Upload upload) throws MojoFailureException, MojoExecutionException {
 
         if (StringUtils.isNotEmpty(upload.getExecutable())) {
             externalUpload(filesToUpload, targetDir, upload);
@@ -45,8 +47,7 @@ public class ScpUploader extends Uploader {
         }
     }
 
-    private void externalUpload (Map<File, String> filesToUpload, String targetDir, Upload upload)
-        throws MojoFailureException {
+    private void externalUpload (Map<File, String> filesToUpload, String targetDir, Upload upload) throws MojoFailureException, MojoExecutionException {
         for (Map.Entry<File, String> copyEntry : filesToUpload.entrySet()) {
             getLogger().debug("Delivering file " + copyEntry.getKey().getAbsolutePath());
             Commandline cmd = new Commandline();
@@ -59,12 +60,18 @@ public class ScpUploader extends Uploader {
             }
 
             cmd.createArg().setFile(copyEntry.getKey());
-            cmd.createArg().setValue(upload.getServer() + ":" + targetDir + "/" + copyEntry.getValue());
+            cmd.createArg().setValue(upload.getServer() + ":" + (targetDir == null ? "" : targetDir + "/") + copyEntry.getValue());
 
             try {
-                cmd.execute();
-            } catch (CommandLineException e) {
-                throw new MojoFailureException("external SCP call failure",e);
+                getLogger().debug("Executing: "+cmd);
+                int exitCode = CommandLineUtils.executeCommandLine(cmd, null, new DefaultConsumer(), new DefaultConsumer());
+
+                if ( exitCode != 0 ) {
+                    throw new MojoExecutionException( "Exit code: " + exitCode );
+                }
+	        }
+	        catch ( CommandLineException e ) {
+	            throw new MojoExecutionException( "Unable to execute command", e );
             }
 
             if (getLogger().isDebugEnabled()) {

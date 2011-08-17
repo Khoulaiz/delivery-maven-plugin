@@ -33,6 +33,7 @@
   <properties>
     <mavenVersion>3.0.3</mavenVersion>
     <aetherVersion>1.12</aetherVersion>
+    <skipTest>false</skipTest>
   </properties>
   <dependencies>
     <dependency>
@@ -146,6 +147,7 @@
         <artifactId>maven-invoker-plugin</artifactId>
         <version>1.5</version>
         <configuration>
+          <skipInvokation>true</skipInvokation>
           <goals>
             <goal>delivery:delivery</goal>
           </goals>
