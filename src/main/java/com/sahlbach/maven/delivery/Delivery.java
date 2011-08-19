@@ -34,7 +34,7 @@ public class Delivery {
 
     /**
      * description of this delivery
-     * @parameter 
+     * @parameter
      */
     private String description;
 
@@ -58,5 +58,13 @@ public class Delivery {
 
     public void setJobs (List<Job> jobs) {
         this.jobs = jobs;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

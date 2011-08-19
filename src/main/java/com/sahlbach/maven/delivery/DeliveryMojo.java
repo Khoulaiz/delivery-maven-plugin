@@ -16,16 +16,16 @@
 
 package com.sahlbach.maven.delivery;
 
+import java.util.*;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.codehaus.plexus.components.interactivity.Prompter;
+import org.codehaus.plexus.components.interactivity.PrompterException;
 import org.sonatype.aether.RepositorySystem;
 import org.sonatype.aether.RepositorySystemSession;
 import org.sonatype.aether.repository.RemoteRepository;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * @author Andreas Sahlbach
@@ -39,7 +39,7 @@ import java.util.List;
  *
  */
 public class DeliveryMojo extends AbstractMojo {
-     /*
+     /**
       * Skip doing the delivery
 	  *
 	  * @parameter expression="${delivery.skip}" default-value="false"
@@ -55,10 +55,18 @@ public class DeliveryMojo extends AbstractMojo {
 
     /**
      * comma separated list of jobs to execute
-     * if not set, execute all of them
-     * @parameter default-value="${deliveryJobs}"
+     * if not set, and interactive is true, ask interactively for the jobs
+     * if not set, and interactive is false, fail
+     * @parameter default-value="${delivery.ids}"
      */
     private String deliveryIds;
+
+    /**
+     * true: ask for more information if needed
+     * false: fail if information is missing
+     * @parameter default-value="${settings.interactiveMode}"
+     */
+    private boolean interactiveMode = true;
 
     /**
      * The entry point to Aether, i.e. the component doing all the work.
@@ -83,26 +91,81 @@ public class DeliveryMojo extends AbstractMojo {
      */
     private List<RemoteRepository> remoteRepos;
 
+    /**
+     * Allows user prompting
+     * @component
+     * @readonly
+     */
+    private Prompter prompter;
 
     public void execute() throws MojoExecutionException, MojoFailureException {
-        
-        if(skip)
+
+        if(skip) {
+            getLog().info("Delivery skipped.");
             return;
+        }
 
-        List<String> deliveriesToExecute = null;
+        Set<String> deliveriesToExecute = new HashSet<String>();
 
-        if(deliveryIds != null)
-            deliveriesToExecute = Arrays.asList(deliveryIds.split(","));
+        if(deliveryIds != null) {
+            int enteredDeliveries = cleanSelection(deliveriesToExecute, deliveryIds);
+            if(enteredDeliveries != deliveriesToExecute.size())
+                throw new MojoFailureException("Delivery interrupted, ambiguous list of IDs in 'delivery.ids' given");
+
+        } else if(deliveries.size() == 1) {
+            deliveriesToExecute.add(deliveries.get(0).getId());
+
+        } else if(interactiveMode) {
+            try {
+                StringBuilder prompt = new StringBuilder("Enter comma separated list of deliveryIDs to execute. Available deliveries are:\n");
+                for (Delivery delivery : deliveries) {
+                    prompt.append("* ").append(delivery.getId());
+                    if(delivery.getDescription() != null)
+                        prompt.append(" (").append(delivery.getDescription()).append(")").append("\n");
+                }
+
+                while(deliveriesToExecute.isEmpty()) {
+
+                    String prompted = prompter.prompt(prompt.toString());
+
+                    if(prompted.isEmpty())
+                        throw new MojoFailureException("Delivery interrupted, empty prompt.");
+
+                    int selected = cleanSelection(deliveriesToExecute, prompted);
+                    if(deliveriesToExecute.size() != selected) {
+                        deliveriesToExecute.clear();
+                    }
+                }
+            } catch (PrompterException e) {
+                throw new MojoExecutionException("Prompt exception:",e);
+            }
+        } else {
+            throw new MojoFailureException("You need to define a comma separated list of delivery IDs in 'delivery.ids' to execute");
+        }
 
         for (Delivery delivery : deliveries) {
 
-            if(deliveriesToExecute != null && !deliveriesToExecute.contains(delivery.getId()))
-                continue;
+            if(deliveriesToExecute.contains(delivery.getId())) {
 
-            for (Job job : delivery.getJobs()) {
-                job.execute(this);
+                for (Job job : delivery.getJobs()) {
+                    job.execute(this);
+                }
             }
         }
+    }
+
+    private int cleanSelection(Set<String> deliveriesToExecute, String prompted) {
+        deliveriesToExecute.clear();
+        String[] selected = prompted.split(",");
+        for (String select : selected) {
+            for (Delivery delivery : deliveries) {
+                if(select.trim().equalsIgnoreCase(delivery.getId().trim())) {
+                    deliveriesToExecute.add(delivery.getId());
+                    break;
+                }
+            }
+        }
+        return selected.length;
     }
 
     public RepositorySystem getRepoSystem () {
@@ -151,5 +214,17 @@ public class DeliveryMojo extends AbstractMojo {
 
     public void setDeliveryIds (String deliveryIds) {
         this.deliveryIds = deliveryIds;
+    }
+
+    public boolean isInteractiveMode() {
+        return interactiveMode;
+    }
+
+    public void setInteractiveMode(boolean interactive) {
+        this.interactiveMode = interactive;
+    }
+
+    public Prompter getPrompter() {
+        return prompter;
     }
 }
