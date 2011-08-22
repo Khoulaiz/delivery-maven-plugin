@@ -16,12 +16,12 @@
 
 package com.sahlbach.maven.delivery.upload;
 
+import java.io.*;
+
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-
-import java.io.*;
 
 /**
  * This class is using the scp client to transfer data and information for the repository.
@@ -490,10 +490,12 @@ public class Scp {
 
         String cmd = "scp -t ";
         if (mode != null) {
-            cmd = cmd + "-p ";
+            cmd += "-p ";
         }
         if (remoteTargetDir != null && remoteTargetDir.length() > 0) {
             cmd = cmd + "-d " + remoteTargetDir;
+        } else {
+            cmd += "-d .";
         }
 
         try {
