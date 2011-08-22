@@ -16,12 +16,16 @@
 
 package com.sahlbach.maven.delivery.exec;
 
+import java.util.List;
+
 import com.sahlbach.maven.delivery.Exec;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.codehaus.plexus.util.StringUtils;
-
-import java.util.List;
+import org.codehaus.plexus.util.cli.CommandLineException;
+import org.codehaus.plexus.util.cli.CommandLineUtils;
+import org.codehaus.plexus.util.cli.Commandline;
+import org.codehaus.plexus.util.cli.DefaultConsumer;
 
 /**
  * User: Andreas Sahlbach
@@ -44,8 +48,41 @@ public class SshExecutor extends Executor{
 
     }
 
-    private void externalExec (List<String> commands, String targetPath, Exec exec) {
-        // TODO: implement
+    private void externalExec (List<String> commands, String targetPath, Exec exec) throws MojoExecutionException {
+        for (String commandLine : commands) {
+            try {
+                getLogger().debug("Executing " + commandLine);
+                Commandline cmd = new Commandline();
 
+                cmd.setExecutable(exec.getExecutable());
+
+                if (exec.getPort() != 0) {
+                    cmd.createArg().setValue("-p");
+                    cmd.createArg().setValue(Integer.toString(exec.getPort()));
+                }
+
+                cmd.createArg().setValue(exec.getUsername()+"@"+exec.getServer());
+                if(targetPath != null) {
+                    cmd.createArg().setValue("cd ");
+                    cmd.createArg().setValue(targetPath);
+                    cmd.createArg().setValue(";");
+                }
+                cmd.createArg().setValue(commandLine);
+
+                getLogger().debug("Executing: "+cmd);
+                int exitCode = CommandLineUtils.executeCommandLine(cmd, null, new DefaultConsumer(), new DefaultConsumer());
+
+                if ( exitCode != 0 ) {
+                    throw new MojoExecutionException( "Exit code: " + exitCode );
+                }
+                if (getLogger().isDebugEnabled()) {
+                    getLogger().info("Executed: " + cmd);
+                }
+	        }
+	        catch ( CommandLineException e ) {
+	            throw new MojoExecutionException( "Unable to execute command", e );
+            }
+
+        }
     }
 }
