@@ -16,14 +16,15 @@
 
 package com.sahlbach.maven.delivery.upload;
 
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-
+import com.sahlbach.maven.delivery.DeliveryMojo;
 import com.sahlbach.maven.delivery.Upload;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * User: Andreas Sahlbach
@@ -61,7 +62,7 @@ public abstract class Uploader {
         return uploader;
     }
 
-    public abstract void uploadFiles (Map<File,String> filesToUpload, String targetPath, Upload upload) throws MojoFailureException, MojoExecutionException;
+    public abstract void uploadFiles (Map<File,String> filesToUpload, Upload upload, DeliveryMojo mojo) throws MojoFailureException, MojoExecutionException;
 
     public Log getLogger () {
         return logger;

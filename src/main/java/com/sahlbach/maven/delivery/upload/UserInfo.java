@@ -16,26 +16,33 @@
 
 package com.sahlbach.maven.delivery.upload;
 
+import org.apache.maven.plugin.logging.Log;
+import org.codehaus.plexus.components.interactivity.Prompter;
+import org.codehaus.plexus.components.interactivity.PrompterException;
+import org.codehaus.plexus.util.cli.DefaultConsumer;
+import org.codehaus.plexus.util.cli.StreamConsumer;
+
+import java.util.Arrays;
+
 public class UserInfo implements com.jcraft.jsch.UserInfo {
 
-    String user;
-    String password;
+    private String user;
+    private String password;
+    private String passphrase;
+    private Prompter prompter;
+    private Log logger;
+    private StreamConsumer consumer = new DefaultConsumer();
 
-    public UserInfo(String user, String password) {
+    public UserInfo (String user, String password, String passphrase, Log logger, Prompter prompter) {
         this.user = user;
         this.password = password;
-    }
-
-    public UserInfo(String userInfo) {
-        String tmp[] = userInfo.split(":");
-        user = tmp[0];
-        if(tmp.length > 0) {
-            password = tmp[1];
-        }
+        this.passphrase = passphrase;
+        this.prompter = prompter;
+        this.logger = logger;
     }
 
     public String getPassphrase () {
-        return null;
+        return passphrase;
     }
 
     public String getPassword () {
@@ -43,18 +50,42 @@ public class UserInfo implements com.jcraft.jsch.UserInfo {
     }
 
     public boolean promptPassword (String message) {
+        if(password == null && prompter != null) {
+            try {
+                password = prompter.prompt(message);
+            } catch (PrompterException e) {
+                logger.error(e);
+            }
+        }
         return true;
     }
 
     public boolean promptPassphrase (String message) {
+        if(passphrase == null && prompter != null) {
+            try {
+                passphrase = prompter.prompt(message);
+            } catch (PrompterException e) {
+                logger.error(e);
+            }
+        }
         return true;
     }
 
     public boolean promptYesNo (String message) {
-        return true;
+        String yesno = null;
+        if(prompter != null) {
+            try {
+                yesno = prompter.prompt(message, Arrays.asList("yes","no"));
+            } catch (PrompterException e) {
+                logger.error(e);
+            }
+        }
+        return (yesno == null) || ("yes".equalsIgnoreCase(yesno));
     }
 
-    public void showMessage (String message) {}
+    public void showMessage (String message) {
+        consumer.consumeLine(message);
+    }
 
     public String getUser () {
         return user;

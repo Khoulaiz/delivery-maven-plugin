@@ -16,11 +16,9 @@
 
 package com.sahlbach.maven.delivery.upload;
 
-import java.io.File;
-import java.util.Map;
-
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
+import com.sahlbach.maven.delivery.DeliveryMojo;
 import com.sahlbach.maven.delivery.Upload;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -30,6 +28,9 @@ import org.codehaus.plexus.util.cli.CommandLineUtils;
 import org.codehaus.plexus.util.cli.Commandline;
 import org.codehaus.plexus.util.cli.DefaultConsumer;
 
+import java.io.File;
+import java.util.Map;
+
 /**
  * User: Andreas Sahlbach
  * Date: 05.08.11
@@ -38,16 +39,16 @@ import org.codehaus.plexus.util.cli.DefaultConsumer;
 public class ScpUploader extends Uploader {
 
     @Override
-    public void uploadFiles (Map<File, String> filesToUpload, String targetDir, Upload upload) throws MojoFailureException, MojoExecutionException {
+    public void uploadFiles (Map<File, String> filesToUpload, Upload upload, DeliveryMojo mojo) throws MojoFailureException, MojoExecutionException {
 
         if (StringUtils.isNotEmpty(upload.getExecutable())) {
-            externalUpload(filesToUpload, targetDir, upload);
+            externalUpload(filesToUpload, upload, mojo);
         } else {
-            internalUpload(filesToUpload, targetDir, upload);
+            internalUpload(filesToUpload, upload, mojo);
         }
     }
 
-    private void externalUpload (Map<File, String> filesToUpload, String targetDir, Upload upload) throws MojoFailureException, MojoExecutionException {
+    private void externalUpload (Map<File, String> filesToUpload, Upload upload, DeliveryMojo mojo) throws MojoFailureException, MojoExecutionException {
         for (Map.Entry<File, String> copyEntry : filesToUpload.entrySet()) {
             getLogger().debug("Delivering file " + copyEntry.getKey().getAbsolutePath());
             Commandline cmd = new Commandline();
@@ -59,8 +60,21 @@ public class ScpUploader extends Uploader {
                 cmd.createArg().setValue(Integer.toString(upload.getPort()));
             }
 
+            if(upload.getKeyfile() != null) {
+                cmd.createArg().setValue("-i");
+                cmd.createArg().setFile(upload.getKeyfile());
+            }
+
             cmd.createArg().setFile(copyEntry.getKey());
-            cmd.createArg().setValue(upload.getServer() + ":" + (targetDir == null ? "" : targetDir + "/") + copyEntry.getValue());
+            StringBuffer targetArg = new StringBuffer();
+            if(upload.getUsername() != null)
+                targetArg.append(upload.getUsername()).append("@");
+            targetArg.append(upload.getServer()).append(":");
+            if(upload.getTargetDir() != null) {
+                targetArg.append(upload.getTargetDir()).append("/");
+            }
+            targetArg.append(copyEntry.getValue());
+            cmd.createArg().setValue(targetArg.toString());
 
             try {
                 getLogger().debug("Executing: "+cmd);
@@ -77,18 +91,21 @@ public class ScpUploader extends Uploader {
             if (getLogger().isDebugEnabled()) {
                 getLogger().info(
                     "Delivered: " + copyEntry.getKey().getAbsolutePath() + " to " + upload.getServer() + ":"
-                    + targetDir + "/" + copyEntry.getValue());
+                    + upload.getTargetDir() + "/" + copyEntry.getValue());
             } else {
                 getLogger().info("Delivered: " + copyEntry.getKey().getName());
             }
         }
     }
 
-    private void internalUpload (Map<File, String> filesToUpload, String targetDir, Upload upload)
-        throws MojoFailureException {
+    private void internalUpload (Map<File, String> filesToUpload, Upload upload, DeliveryMojo mojo) throws MojoFailureException {
         Session session = null;
         try {
-            UserInfo userInfo = new UserInfo(upload.getUsername(), upload.getUserPassword());
+            UserInfo userInfo = new UserInfo(upload.getUsername(),
+                                             upload.getUserPassword(),
+                                             upload.getKeyPassword(),
+                                             mojo.getLog(),
+                                             mojo.isInteractiveMode() ? mojo.getPrompter() : null);
             String host = upload.getServer();
             int port = upload.getPort() == 0 ? 22 : upload.getPort();
 
@@ -101,10 +118,10 @@ public class ScpUploader extends Uploader {
 
             for (Map.Entry<File, String> copyEntry : filesToUpload.entrySet()) {
                 getLogger().debug("Delivering file " + copyEntry.getKey().getAbsolutePath());
-                scp.put(copyEntry.getKey().getAbsolutePath(), targetDir, copyEntry.getValue(), upload.getFileMask());
+                scp.put(copyEntry.getKey().getAbsolutePath(), upload.getTargetDir(), copyEntry.getValue(), upload.getFileMask());
                 if (getLogger().isDebugEnabled()) {
                     getLogger().info("Delivered: " + copyEntry.getKey().getAbsolutePath() + " to " + host + ":"
-                                     + targetDir + "/" + copyEntry.getValue());
+                                     + upload.getTargetDir() + "/" + copyEntry.getValue());
                 } else {
                     getLogger().info("Delivered: " + copyEntry.getKey().getName());
                 }

@@ -134,12 +134,12 @@ public class Upload {
         if(artifacts != null)
             filesToUpload.addAll(resolveArtifacts(mojo));
 
-        Map<File,String> filesWithTargetNames = calculateTagetNames(filesToUpload);
+        Map<File,String> filesWithTargetNames = calculateTargetNames(filesToUpload);
 
-        uploader.uploadFiles(filesWithTargetNames, targetDir,this);
+        uploader.uploadFiles(filesWithTargetNames, this, mojo);
     }
 
-    private Map<File,String> calculateTagetNames (List<File> filesToUpload) {
+    private Map<File,String> calculateTargetNames (List<File> filesToUpload) {
         Map<File,String> filesWithTargetNames = new HashMap<File, String>(filesToUpload.size());
         for (File file : filesToUpload) {
             for (RenameRegexp renameRegexp : renameRegexps) {
