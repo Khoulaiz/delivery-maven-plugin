@@ -41,7 +41,7 @@ public class Upload {
 
     /**
      * Type of upload
-     * @parameter
+     * @parameter default-value="scp"
      * @required
      */
     private String type;

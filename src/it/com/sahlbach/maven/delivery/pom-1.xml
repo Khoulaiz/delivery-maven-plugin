@@ -62,35 +62,6 @@
                 </job>
               </jobs>
             </delivery>
-            <delivery>
-              <id>external</id>
-              <description>Tests the upload using an external scp</description>
-              <jobs>
-                <job>
-                  <upload>
-                    <type>scp</type>
-                    <executable>scp</executable>
-                    <server>${testServer}</server>
-                    <targetDir>${testPath}</targetDir>
-                    <username>${testUser}</username>
-                    <userPassword>${testPassword}</userPassword>
-                    <renameRegexps>
-                      <renameRegexp>
-                        <from>(.*)-([0-9\.]*).jar</from>
-                        <to>$1-2.jar</to>
-                      </renameRegexp>
-                    </renameRegexps>
-                    <artifacts>
-                      <artifact>
-                        <groupId>org.sonatype.aether</groupId>
-                        <artifactId>aether-util</artifactId>
-                        <version>1.12</version>
-                      </artifact>
-                    </artifacts>
-                  </upload>
-                </job>
-              </jobs>
-            </delivery>
           </deliveries>
         </configuration>
       </plugin>
