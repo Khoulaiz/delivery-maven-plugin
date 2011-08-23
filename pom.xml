@@ -208,6 +208,24 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>com.goldin.plugins</groupId>
+        <artifactId>maven-about-plugin</artifactId>
+        <version>0.2.3</version>
+        <executions>
+          <execution>
+            <id>create-about</id>
+            <phase>package</phase>
+            <goals>
+              <goal>create-about</goal>
+            </goals>
+            <configuration>
+              <dumpDependencies>true</dumpDependencies>
+              <endOfLine>unix</endOfLine>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
     <resources>
       <resource>
