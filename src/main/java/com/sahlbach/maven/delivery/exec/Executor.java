@@ -16,13 +16,14 @@
 
 package com.sahlbach.maven.delivery.exec;
 
+import java.util.HashMap;
+import java.util.List;
+
+import com.sahlbach.maven.delivery.DeliveryMojo;
 import com.sahlbach.maven.delivery.Exec;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
-
-import java.util.HashMap;
-import java.util.List;
 
 /**
  * User: Andreas Sahlbach
@@ -56,7 +57,7 @@ public abstract class Executor {
         return executor;
     }
 
-    public abstract void execute (List<String> commands, String targetPath, Exec exec) throws
+    public abstract void execute (List<String> commands, Exec exec, DeliveryMojo mojo) throws
         MojoFailureException, MojoExecutionException;
 
     public Log getLogger () {

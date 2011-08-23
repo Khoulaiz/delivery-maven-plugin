@@ -16,6 +16,13 @@
 
 package com.sahlbach.maven.delivery;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+
 import com.sahlbach.maven.delivery.upload.Uploader;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -25,19 +32,12 @@ import org.sonatype.aether.resolution.ArtifactResolutionException;
 import org.sonatype.aether.resolution.ArtifactResult;
 import org.sonatype.aether.util.artifact.DefaultArtifact;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-
 /**
  * User: Andreas Sahlbach
  * Date: 06.08.11
  * Time: 11:24
  */
-public class Upload {
+public class Upload extends AbstractSshRemoteJob {
 
     /**
      * Type of upload
@@ -45,12 +45,6 @@ public class Upload {
      * @required
      */
     private String type;
-
-    /**
-     * if set, use this executable as external program for the upload
-     * @parameter 
-     */
-    private String executable;
 
     /**
      * target directory on the remote server
@@ -70,42 +64,6 @@ public class Upload {
      * @parameter
      */
     private List<DeliveryArtifact> artifacts;
-
-    /**
-     * hostname of the target server
-     * @parameter
-     */
-    private String server;
-
-    /**
-     * port of the target server
-     * @parameter 
-     */
-    private int port;
-
-    /**
-     * remote username to use to login
-     * @parameter
-     */
-    private String username;
-
-    /**
-     * password to use for username / password authentication
-     * @parameter
-     */
-    private String userPassword;
-
-    /**
-     * keyfile to use for authentication
-     * @parameter
-     */
-    private File keyfile;
-
-    /**
-     * @parameter
-     * password to use to unlock keyfile
-     */
-    private String keyPassword;
 
     /**
      * File mask to use for copied files. Default is 0644
@@ -200,26 +158,6 @@ public class Upload {
         return result;
     }
 
-    public int getPort () {
-        return port;
-    }
-
-    public String getUsername () {
-        return username;
-    }
-
-    public String getUserPassword () {
-        return userPassword;
-    }
-
-    public File getKeyfile () {
-        return keyfile;
-    }
-
-    public String getKeyPassword () {
-        return keyPassword;
-    }
-
     public String getType () {
         return type;
     }
@@ -240,23 +178,11 @@ public class Upload {
         return fileMask;
     }
 
-    public String getServer () {
-        return server;
-    }
-
     public List<RenameRegexp> getRenameRegexps () {
         return renameRegexps;
     }
 
     public void setRenameRegexps (List<RenameRegexp> renameRegexps) {
         this.renameRegexps = renameRegexps;
-    }
-
-    public String getExecutable () {
-        return executable;
-    }
-
-    public void setExecutable (String executable) {
-        this.executable = executable;
     }
 }

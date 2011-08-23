@@ -18,7 +18,11 @@ package com.sahlbach.maven.delivery.exec;
 
 import java.util.List;
 
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
+import com.sahlbach.maven.delivery.DeliveryMojo;
 import com.sahlbach.maven.delivery.Exec;
+import com.sahlbach.maven.delivery.upload.UserInfo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.codehaus.plexus.util.StringUtils;
@@ -32,23 +36,51 @@ import org.codehaus.plexus.util.cli.DefaultConsumer;
  * Date: 20.08.11
  * Time: 21:34
  */
-public class SshExecutor extends Executor{
+public class SshExecutor extends Executor {
+
     @Override
-    public void execute (List<String> commands, String targetPath, Exec exec)
+    public void execute (List<String> commands, Exec exec, DeliveryMojo mojo)
         throws MojoFailureException, MojoExecutionException {
         if (StringUtils.isNotEmpty(exec.getExecutable())) {
-            externalExec(commands, targetPath, exec);
+            externalExec(commands, exec, mojo);
         } else {
-            internalExec(commands, targetPath, exec);
+            internalExec(commands, exec, mojo);
         }
     }
 
-    private void internalExec (List<String> commands, String targetPath, Exec exec) {
-        // TODO: implement
+    private void internalExec (List<String> commands, Exec exec, DeliveryMojo mojo) throws MojoFailureException {
+        Session session = null;
+        try {
+            UserInfo userInfo = new UserInfo(exec.getUsername(),
+                                             exec.getUserPassword(),
+                                             exec.getKeyPassword(),
+                                             mojo.getLog(),
+                                             mojo.isInteractiveMode() ? mojo.getPrompter() : null);
+            String host = exec.getServer();
+            int port = exec.getPort() == 0 ? 22 : exec.getPort();
+
+            JSch jsch = new JSch();
+            session = jsch.getSession(userInfo.getUser(), host, port);
+            session.setUserInfo(userInfo);
+
+            session.connect();
+
+            // TODO implement
+
+            session.disconnect();
+            session = null;
+        } catch (Exception e) {
+            throw new MojoFailureException("SSH failed.", e);
+        } finally {
+            if (session != null) {
+                session.disconnect();
+            }
+        }
+
 
     }
 
-    private void externalExec (List<String> commands, String targetPath, Exec exec) throws MojoExecutionException {
+    private void externalExec (List<String> commands, Exec exec, DeliveryMojo mojo) throws MojoExecutionException {
         for (String commandLine : commands) {
             try {
                 getLogger().debug("Executing " + commandLine);
@@ -62,9 +94,9 @@ public class SshExecutor extends Executor{
                 }
 
                 cmd.createArg().setValue(exec.getUsername()+"@"+exec.getServer());
-                if(targetPath != null) {
+                if(exec.getTargetDir() != null) {
                     cmd.createArg().setValue("cd ");
-                    cmd.createArg().setValue(targetPath);
+                    cmd.createArg().setValue(exec.getTargetDir());
                     cmd.createArg().setValue(";");
                 }
                 cmd.createArg().setValue(commandLine);
@@ -72,7 +104,7 @@ public class SshExecutor extends Executor{
                 getLogger().debug("Executing: "+cmd);
                 int exitCode = CommandLineUtils.executeCommandLine(cmd, null, new DefaultConsumer(), new DefaultConsumer());
 
-                if ( exitCode != 0 ) {
+                if ( exitCode == 255 ) {
                     throw new MojoExecutionException( "Exit code: " + exitCode );
                 }
                 if (getLogger().isDebugEnabled()) {

@@ -16,6 +16,9 @@
 
 package com.sahlbach.maven.delivery.upload;
 
+import java.io.File;
+import java.util.Map;
+
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
 import com.sahlbach.maven.delivery.DeliveryMojo;
@@ -27,9 +30,6 @@ import org.codehaus.plexus.util.cli.CommandLineException;
 import org.codehaus.plexus.util.cli.CommandLineUtils;
 import org.codehaus.plexus.util.cli.Commandline;
 import org.codehaus.plexus.util.cli.DefaultConsumer;
-
-import java.io.File;
-import java.util.Map;
 
 /**
  * User: Andreas Sahlbach
@@ -45,56 +45,6 @@ public class ScpUploader extends Uploader {
             externalUpload(filesToUpload, upload, mojo);
         } else {
             internalUpload(filesToUpload, upload, mojo);
-        }
-    }
-
-    private void externalUpload (Map<File, String> filesToUpload, Upload upload, DeliveryMojo mojo) throws MojoFailureException, MojoExecutionException {
-        for (Map.Entry<File, String> copyEntry : filesToUpload.entrySet()) {
-            getLogger().debug("Delivering file " + copyEntry.getKey().getAbsolutePath());
-            Commandline cmd = new Commandline();
-
-            cmd.setExecutable(upload.getExecutable());
-
-            if (upload.getPort() != 0) {
-                cmd.createArg().setValue("-P");
-                cmd.createArg().setValue(Integer.toString(upload.getPort()));
-            }
-
-            if(upload.getKeyfile() != null) {
-                cmd.createArg().setValue("-i");
-                cmd.createArg().setFile(upload.getKeyfile());
-            }
-
-            cmd.createArg().setFile(copyEntry.getKey());
-            StringBuffer targetArg = new StringBuffer();
-            if(upload.getUsername() != null)
-                targetArg.append(upload.getUsername()).append("@");
-            targetArg.append(upload.getServer()).append(":");
-            if(upload.getTargetDir() != null) {
-                targetArg.append(upload.getTargetDir()).append("/");
-            }
-            targetArg.append(copyEntry.getValue());
-            cmd.createArg().setValue(targetArg.toString());
-
-            try {
-                getLogger().debug("Executing: "+cmd);
-                int exitCode = CommandLineUtils.executeCommandLine(cmd, null, new DefaultConsumer(), new DefaultConsumer());
-
-                if ( exitCode != 0 ) {
-                    throw new MojoExecutionException( "Exit code: " + exitCode );
-                }
-	        }
-	        catch ( CommandLineException e ) {
-	            throw new MojoExecutionException( "Unable to execute command", e );
-            }
-
-            if (getLogger().isDebugEnabled()) {
-                getLogger().info(
-                    "Delivered: " + copyEntry.getKey().getAbsolutePath() + " to " + upload.getServer() + ":"
-                    + upload.getTargetDir() + "/" + copyEntry.getValue());
-            } else {
-                getLogger().info("Delivered: " + copyEntry.getKey().getName());
-            }
         }
     }
 
@@ -134,6 +84,56 @@ public class ScpUploader extends Uploader {
         } finally {
             if (session != null) {
                 session.disconnect();
+            }
+        }
+    }
+
+    private void externalUpload (Map<File, String> filesToUpload, Upload upload, DeliveryMojo mojo) throws MojoFailureException, MojoExecutionException {
+        for (Map.Entry<File, String> copyEntry : filesToUpload.entrySet()) {
+            getLogger().debug("Delivering file " + copyEntry.getKey().getAbsolutePath());
+            Commandline cmd = new Commandline();
+
+            cmd.setExecutable(upload.getExecutable());
+
+            if (upload.getPort() != 0) {
+                cmd.createArg().setValue("-P");
+                cmd.createArg().setValue(Integer.toString(upload.getPort()));
+            }
+
+            if(upload.getKeyfile() != null) {
+                cmd.createArg().setValue("-i");
+                cmd.createArg().setFile(upload.getKeyfile());
+            }
+
+            cmd.createArg().setFile(copyEntry.getKey());
+            StringBuilder targetArg = new StringBuilder();
+            if(upload.getUsername() != null)
+                targetArg.append(upload.getUsername()).append("@");
+            targetArg.append(upload.getServer()).append(":");
+            if(upload.getTargetDir() != null) {
+                targetArg.append(upload.getTargetDir()).append("/");
+            }
+            targetArg.append(copyEntry.getValue());
+            cmd.createArg().setValue(targetArg.toString());
+
+            try {
+                getLogger().debug("Executing: "+cmd);
+                int exitCode = CommandLineUtils.executeCommandLine(cmd, null, new DefaultConsumer(), new DefaultConsumer());
+
+                if ( exitCode != 0 ) {
+                    throw new MojoExecutionException( "Exit code: " + exitCode );
+                }
+	        }
+	        catch ( CommandLineException e ) {
+	            throw new MojoExecutionException( "Unable to execute command", e );
+            }
+
+            if (getLogger().isDebugEnabled()) {
+                getLogger().info(
+                    "Delivered: " + copyEntry.getKey().getAbsolutePath() + " to " + upload.getServer() + ":"
+                    + upload.getTargetDir() + "/" + copyEntry.getValue());
+            } else {
+                getLogger().info("Delivered: " + copyEntry.getKey().getName());
             }
         }
     }

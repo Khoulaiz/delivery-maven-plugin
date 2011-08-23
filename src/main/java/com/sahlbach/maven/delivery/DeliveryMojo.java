@@ -128,7 +128,7 @@ public class DeliveryMojo extends AbstractMojo {
 
                     String prompted = prompter.prompt(prompt.toString());
 
-                    if(prompted.isEmpty())
+                    if(prompted.length() == 0)
                         throw new MojoFailureException("Delivery interrupted, empty prompt.");
 
                     int selected = cleanSelection(deliveriesToExecute, prompted);
