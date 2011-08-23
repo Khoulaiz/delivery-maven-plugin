@@ -57,14 +57,14 @@ public class DeliveryMojo extends AbstractMojo {
      * comma separated list of jobs to execute
      * if not set, and interactive is true, ask interactively for the jobs
      * if not set, and interactive is false, fail
-     * @parameter default-value="${delivery.ids}"
+     * @parameter expression="${delivery.ids}"
      */
     private String deliveryIds;
 
     /**
      * true: ask for more information if needed
      * false: fail if information is missing
-     * @parameter default-value="${settings.interactiveMode}"
+     * @parameter expression="${settings.interactiveMode}"
      */
     private boolean interactiveMode = true;
 
@@ -78,7 +78,7 @@ public class DeliveryMojo extends AbstractMojo {
     /**
      * The current repository/network configuration of Maven.
      *
-     * @parameter default-value="${repositorySystemSession}"
+     * @parameter expression="${repositorySystemSession}"
      * @readonly
      */
     private RepositorySystemSession repoSession;
@@ -86,7 +86,7 @@ public class DeliveryMojo extends AbstractMojo {
     /**
      * The project's remote repositories to use for the resolution.
      *
-     * @parameter default-value="${project.remoteProjectRepositories}"
+     * @parameter expression="${project.remoteProjectRepositories}"
      * @readonly
      */
     private List<RemoteRepository> remoteRepos;

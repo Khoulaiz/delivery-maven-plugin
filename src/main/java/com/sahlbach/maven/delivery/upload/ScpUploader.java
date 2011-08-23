@@ -19,10 +19,10 @@ package com.sahlbach.maven.delivery.upload;
 import java.io.File;
 import java.util.Map;
 
-import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
 import com.sahlbach.maven.delivery.DeliveryMojo;
 import com.sahlbach.maven.delivery.Upload;
+import com.sahlbach.maven.delivery.ssh.SshHelper;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.codehaus.plexus.util.StringUtils;
@@ -51,26 +51,14 @@ public class ScpUploader extends Uploader {
     private void internalUpload (Map<File, String> filesToUpload, Upload upload, DeliveryMojo mojo) throws MojoFailureException {
         Session session = null;
         try {
-            UserInfo userInfo = new UserInfo(upload.getUsername(),
-                                             upload.getUserPassword(),
-                                             upload.getKeyPassword(),
-                                             mojo.getLog(),
-                                             mojo.isInteractiveMode() ? mojo.getPrompter() : null);
-            String host = upload.getServer();
-            int port = upload.getPort() == 0 ? 22 : upload.getPort();
-
-            JSch jsch = new JSch();
-            session = jsch.getSession(userInfo.getUser(), host, port);
-            session.setUserInfo(userInfo);
-
-            session.connect();
+            session = SshHelper.connectSsh(upload, mojo);
             Scp scp = new Scp(session);
 
             for (Map.Entry<File, String> copyEntry : filesToUpload.entrySet()) {
                 getLogger().debug("Delivering file " + copyEntry.getKey().getAbsolutePath());
                 scp.put(copyEntry.getKey().getAbsolutePath(), upload.getTargetDir(), copyEntry.getValue(), upload.getFileMask());
                 if (getLogger().isDebugEnabled()) {
-                    getLogger().info("Delivered: " + copyEntry.getKey().getAbsolutePath() + " to " + host + ":"
+                    getLogger().info("Delivered: " + copyEntry.getKey().getAbsolutePath() + " to " + upload.getServer() + ":"
                                      + upload.getTargetDir() + "/" + copyEntry.getValue());
                 } else {
                     getLogger().info("Delivered: " + copyEntry.getKey().getName());

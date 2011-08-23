@@ -44,7 +44,7 @@ public class Upload extends AbstractSshRemoteJob {
      * @parameter default-value="scp"
      * @required
      */
-    private String type;
+    private String type = "scp";
 
     /**
      * target directory on the remote server
@@ -73,7 +73,7 @@ public class Upload extends AbstractSshRemoteJob {
      *
      * @parameter default-value="0644"
      */
-    private String fileMask;
+    private String fileMask = "0644";
 
     /**
      * Optional list of regexp to rename files during copy. The first regexp that matches will be used to rename the
@@ -184,5 +184,25 @@ public class Upload extends AbstractSshRemoteJob {
 
     public void setRenameRegexps (List<RenameRegexp> renameRegexps) {
         this.renameRegexps = renameRegexps;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public void setTargetDir(String targetDir) {
+        this.targetDir = targetDir;
+    }
+
+    public void setFileset(Fileset fileset) {
+        this.fileset = fileset;
+    }
+
+    public void setArtifacts(List<DeliveryArtifact> artifacts) {
+        this.artifacts = artifacts;
+    }
+
+    public void setFileMask(String fileMask) {
+        this.fileMask = fileMask;
     }
 }

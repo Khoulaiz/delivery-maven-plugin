@@ -16,13 +16,14 @@
 
 package com.sahlbach.maven.delivery.upload;
 
+import java.util.Arrays;
+
+import com.sahlbach.maven.delivery.AbstractSshRemoteJob;
 import org.apache.maven.plugin.logging.Log;
 import org.codehaus.plexus.components.interactivity.Prompter;
 import org.codehaus.plexus.components.interactivity.PrompterException;
 import org.codehaus.plexus.util.cli.DefaultConsumer;
 import org.codehaus.plexus.util.cli.StreamConsumer;
-
-import java.util.Arrays;
 
 public class UserInfo implements com.jcraft.jsch.UserInfo {
 
@@ -33,10 +34,10 @@ public class UserInfo implements com.jcraft.jsch.UserInfo {
     private Log logger;
     private StreamConsumer consumer = new DefaultConsumer();
 
-    public UserInfo (String user, String password, String passphrase, Log logger, Prompter prompter) {
-        this.user = user;
-        this.password = password;
-        this.passphrase = passphrase;
+    public UserInfo (AbstractSshRemoteJob sshJob, Log logger, Prompter prompter) {
+        this.user = sshJob.getUsername();
+        this.password = sshJob.getUserPassword();
+        this.passphrase = sshJob.getKeyPassword();
         this.prompter = prompter;
         this.logger = logger;
     }

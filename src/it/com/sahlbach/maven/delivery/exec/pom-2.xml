@@ -31,11 +31,12 @@
         <configuration>
           <deliveries>
             <delivery>
-              <id>internal</id>
-              <description>Tests the upload using an internal ssh</description>
+              <id>external</id>
+              <description>Tests the upload using an external ssh</description>
               <jobs>
                 <job>
                   <exec>
+                    <executable>ssh</executable>
                     <type>ssh</type>
                     <server>${testServer}</server>
                     <username>${testUser}</username>

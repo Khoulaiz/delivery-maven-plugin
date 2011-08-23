@@ -16,13 +16,15 @@
 
 package com.sahlbach.maven.delivery.exec;
 
+import java.io.InputStream;
 import java.util.List;
 
-import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.Session;
 import com.sahlbach.maven.delivery.DeliveryMojo;
 import com.sahlbach.maven.delivery.Exec;
-import com.sahlbach.maven.delivery.upload.UserInfo;
+import com.sahlbach.maven.delivery.ssh.SshHelper;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.codehaus.plexus.util.StringUtils;
@@ -51,70 +53,98 @@ public class SshExecutor extends Executor {
     private void internalExec (List<String> commands, Exec exec, DeliveryMojo mojo) throws MojoFailureException {
         Session session = null;
         try {
-            UserInfo userInfo = new UserInfo(exec.getUsername(),
-                                             exec.getUserPassword(),
-                                             exec.getKeyPassword(),
-                                             mojo.getLog(),
-                                             mojo.isInteractiveMode() ? mojo.getPrompter() : null);
-            String host = exec.getServer();
-            int port = exec.getPort() == 0 ? 22 : exec.getPort();
+            session = SshHelper.connectSsh(exec, mojo);
 
-            JSch jsch = new JSch();
-            session = jsch.getSession(userInfo.getUser(), host, port);
-            session.setUserInfo(userInfo);
+            Channel channel = session.openChannel("exec");
+            StringBuilder remoteCmdLine = new StringBuilder();
 
-            session.connect();
+            for (String command : commands) {
+                remoteCmdLine.append(command).append(exec.getCommandSeparator());
+            }
+            ((ChannelExec)channel).setCommand(remoteCmdLine.toString());
 
-            // TODO implement
+            if(mojo.isInteractiveMode()) {
+                channel.setInputStream(System.in);
+            } else {
+                channel.setInputStream(null);
+            }
+            channel.setOutputStream(System.out);
+            ((ChannelExec)channel).setErrStream(System.err);
+
+            InputStream in = channel.getInputStream();
+
+            if (getLogger().isInfoEnabled()) {
+                getLogger().info("Executing: " + remoteCmdLine.toString());
+            }
+            channel.connect();
+
+            byte[] tmp = new byte[1024];
+            while(true) {
+                while(in.available() > 0) {
+                    int i = in.read(tmp, 0, 1024);
+                    if(i < 0)
+                        break;
+                    System.out.print(new String(tmp, 0, i));
+                }
+                if(channel.isClosed()){
+                    if(getLogger().isDebugEnabled())
+                        getLogger().debug("Exit Status: "+channel.getExitStatus());
+                    break;
+                }
+                try{
+                    Thread.sleep(1000);
+                }catch(Exception ee){
+                    getLogger().error(ee);
+                }
+            }
+            channel.disconnect();
+            if (getLogger().isDebugEnabled()) {
+                getLogger().info("Executed: " + remoteCmdLine);
+            }
 
             session.disconnect();
             session = null;
         } catch (Exception e) {
-            throw new MojoFailureException("SSH failed.", e);
+            throw new MojoFailureException("SCP failed.", e);
         } finally {
             if (session != null) {
                 session.disconnect();
             }
         }
-
-
     }
 
     private void externalExec (List<String> commands, Exec exec, DeliveryMojo mojo) throws MojoExecutionException {
-        for (String commandLine : commands) {
-            try {
-                getLogger().debug("Executing " + commandLine);
-                Commandline cmd = new Commandline();
+        StringBuilder remoteCmdLine = new StringBuilder();
 
-                cmd.setExecutable(exec.getExecutable());
+        for (String command : commands) {
+            remoteCmdLine.append(command).append(exec.getCommandSeparator());
+        }
+        try {
+            Commandline cmd = new Commandline();
 
-                if (exec.getPort() != 0) {
-                    cmd.createArg().setValue("-p");
-                    cmd.createArg().setValue(Integer.toString(exec.getPort()));
-                }
+            cmd.setExecutable(exec.getExecutable());
 
-                cmd.createArg().setValue(exec.getUsername()+"@"+exec.getServer());
-                if(exec.getTargetDir() != null) {
-                    cmd.createArg().setValue("cd ");
-                    cmd.createArg().setValue(exec.getTargetDir());
-                    cmd.createArg().setValue(";");
-                }
-                cmd.createArg().setValue(commandLine);
-
-                getLogger().debug("Executing: "+cmd);
-                int exitCode = CommandLineUtils.executeCommandLine(cmd, null, new DefaultConsumer(), new DefaultConsumer());
-
-                if ( exitCode == 255 ) {
-                    throw new MojoExecutionException( "Exit code: " + exitCode );
-                }
-                if (getLogger().isDebugEnabled()) {
-                    getLogger().info("Executed: " + cmd);
-                }
-	        }
-	        catch ( CommandLineException e ) {
-	            throw new MojoExecutionException( "Unable to execute command", e );
+            if (exec.getPort() != 0) {
+                cmd.createArg().setValue("-p");
+                cmd.createArg().setValue(Integer.toString(exec.getPort()));
             }
 
+            cmd.createArg().setValue(exec.getUsername()+"@"+exec.getServer());
+            cmd.createArg().setValue(remoteCmdLine.toString());
+
+            if(getLogger().isInfoEnabled())
+                getLogger().info("Executing: "+cmd);
+            int exitCode = CommandLineUtils.executeCommandLine(cmd, null, new DefaultConsumer(), new DefaultConsumer());
+
+            if ( exitCode == 255 ) {
+                throw new MojoExecutionException( "Exit code: " + exitCode );
+            }
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("Executed: " + cmd);
+            }
+        }
+        catch ( CommandLineException e ) {
+            throw new MojoExecutionException( "Unable to execute command", e );
         }
     }
 }

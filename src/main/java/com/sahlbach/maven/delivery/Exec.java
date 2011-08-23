@@ -34,7 +34,7 @@ public class Exec extends AbstractSshRemoteJob {
      * @parameter default-value="ssh"
      * @required
      */
-    private String type;
+    private String type = "ssh";
 
     /**
      * List of commands to execute
@@ -44,12 +44,11 @@ public class Exec extends AbstractSshRemoteJob {
     private List<String> commands;
 
     /**
-     * target directory on the remote server
+     * String to use on remote system to concatenate the commands together
      * @parameter
      * @required
      */
-    private String targetDir;
-
+    private String commandSeparator = ";";
 
     public void execute (DeliveryMojo mojo) throws MojoExecutionException, MojoFailureException {
         Executor executor = Executor.createExecutor(type.toLowerCase(), mojo.getLog());
@@ -75,11 +74,11 @@ public class Exec extends AbstractSshRemoteJob {
         this.commands = commands;
     }
 
-    public String getTargetDir () {
-        return targetDir;
+    public String getCommandSeparator() {
+        return commandSeparator;
     }
 
-    public void setTargetDir (String targetDir) {
-        this.targetDir = targetDir;
+    public void setCommandSeparator(String commandSeparator) {
+        this.commandSeparator = commandSeparator;
     }
 }
