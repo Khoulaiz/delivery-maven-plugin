@@ -23,6 +23,11 @@
   <name>delivery-maven-plugin</name>
   <description>A maven plugin to copy artifacts and files to remote servers and to execute remote commands using SSH</description>
   <url>http://khoulaiz.github.com/delivery-maven-plugin</url>
+   <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
   <licenses>
     <license>
       <name>Apache 2</name>
