@@ -1,2 +1,4 @@
 com.sahlbach.maven.delivery
+com.sahlbach.maven.delivery.exec
+com.sahlbach.maven.delivery.ssh
 com.sahlbach.maven.delivery.upload
