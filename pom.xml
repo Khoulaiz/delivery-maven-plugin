@@ -35,6 +35,22 @@
     <aetherVersion>1.12</aetherVersion>
     <skipTest>false</skipTest>
   </properties>
+  <developers>
+    <developer>
+      <id>khoulaiz</id>
+			<name>Andreas Sahlbach</name>
+			<email>andreas@sahlbach.com</email>
+			<url>http://www.sahlbach.com</url>
+			<organization>sahlbach.com</organization>
+			<organizationUrl>http://www.sahlbach.com</organizationUrl>
+			<roles>
+				<role>architect</role>
+				<role>developer</role>
+        <role>guru</role>
+			</roles>
+			<timezone>+1</timezone>
+    </developer>
+  </developers>
   <dependencies>
     <dependency>
       <groupId>com.jcraft</groupId>
