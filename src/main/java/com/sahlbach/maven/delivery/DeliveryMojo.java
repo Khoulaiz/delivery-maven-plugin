@@ -98,6 +98,11 @@ public class DeliveryMojo extends AbstractMojo {
      */
     private Prompter prompter;
 
+    /**
+     * @parameter expression="${project.version}"
+     */
+    private String projectVersion;
+
     public void execute() throws MojoExecutionException, MojoFailureException {
 
         if(skip) {
@@ -226,5 +231,9 @@ public class DeliveryMojo extends AbstractMojo {
 
     public Prompter getPrompter() {
         return prompter;
+    }
+
+    public String getProjectVersion() {
+        return projectVersion;
     }
 }

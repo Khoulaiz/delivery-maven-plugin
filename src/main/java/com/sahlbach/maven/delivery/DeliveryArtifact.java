@@ -40,9 +40,9 @@ public class DeliveryArtifact {
     /**
      * extension of the artifact
      *
-     * @parameter
+     * @parameter default-value="war"
      */
-    private String extension;
+    private String extension = "war";
 
     /**
      * version of the artifact
@@ -57,6 +57,11 @@ public class DeliveryArtifact {
      * @parameter
      */
     private String classifier;
+
+    /**
+     * @parameter
+     */
+    private boolean promptForVersion = false;
 
     public String getGroupId () {
         return groupId;
@@ -96,6 +101,14 @@ public class DeliveryArtifact {
 
     public void setClassifier (String classifier) {
         this.classifier = classifier;
+    }
+
+    public boolean isPromptForVersion() {
+        return promptForVersion;
+    }
+
+    public void setPromptForVersion(boolean promptForVersion) {
+        this.promptForVersion = promptForVersion;
     }
 
     @Override
