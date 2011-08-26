@@ -33,6 +33,11 @@ public class SshHelper {
 
         JSch jsch = new JSch();
         Session session = jsch.getSession(userInfo.getUser(), job.getServer(), port);
+
+        java.util.Properties config = new java.util.Properties(); 
+        config.put("StrictHostKeyChecking", "no");
+        session.setConfig(config);
+
         session.setUserInfo(userInfo);
 
         session.connect();
