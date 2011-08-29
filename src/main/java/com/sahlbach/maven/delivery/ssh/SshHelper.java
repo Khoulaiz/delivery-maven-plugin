@@ -21,6 +21,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.sahlbach.maven.delivery.AbstractSshRemoteJob;
 import com.sahlbach.maven.delivery.DeliveryMojo;
+import com.sahlbach.maven.delivery.prompt.DeliveryPrompter;
 import com.sahlbach.maven.delivery.upload.UserInfo;
 
 public class SshHelper {
@@ -28,11 +29,16 @@ public class SshHelper {
     private SshHelper(){}
 
     public static Session connectSsh(AbstractSshRemoteJob job, DeliveryMojo mojo) throws JSchException {
-        UserInfo userInfo = new UserInfo(job, mojo.getLog(), mojo.isInteractiveMode() ? mojo.getPrompter() : null);
+        UserInfo userInfo = new UserInfo(job, mojo.getLog(), mojo.isInteractiveMode() ? new DeliveryPrompter() : null);
         int port = job.getPort() == 0 ? 22 : job.getPort();
 
         JSch jsch = new JSch();
         Session session = jsch.getSession(userInfo.getUser(), job.getServer(), port);
+
+        java.util.Properties config = new java.util.Properties();
+        config.put("StrictHostKeyChecking", "no");
+        session.setConfig(config);
+
         session.setUserInfo(userInfo);
 
         session.connect();

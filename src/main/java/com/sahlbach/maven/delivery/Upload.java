@@ -26,6 +26,7 @@ import java.util.regex.Matcher;
 import com.sahlbach.maven.delivery.upload.Uploader;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.codehaus.plexus.components.interactivity.PrompterException;
 import org.sonatype.aether.artifact.Artifact;
 import org.sonatype.aether.resolution.ArtifactRequest;
 import org.sonatype.aether.resolution.ArtifactResolutionException;
@@ -118,6 +119,13 @@ public class Upload extends AbstractSshRemoteJob {
         List<File> resultList = new ArrayList<File>(artifacts.size());
 
         for (DeliveryArtifact deliveryArtifact : artifacts) {
+            if((deliveryArtifact.getVersion() == null || deliveryArtifact.isPromptForVersion()) && mojo.isInteractiveMode()) {
+                try {
+                    promptForVersion(deliveryArtifact,mojo);
+                } catch (PrompterException e) {
+                    throw new MojoExecutionException("Prompter exception.",e);
+                }
+            }
             Artifact artifact;
             try {
                 artifact = new DefaultArtifact( deliveryArtifact.toString() );
@@ -143,6 +151,24 @@ public class Upload extends AbstractSshRemoteJob {
             resultList.add(result.getArtifact().getFile());
         }
         return resultList;
+    }
+
+    private void promptForVersion(DeliveryArtifact deliveryArtifact, DeliveryMojo mojo) throws PrompterException {
+        StringBuilder message = new StringBuilder("Enter the version of ")
+                    .append(deliveryArtifact.getGroupId()).append(":")
+                    .append(deliveryArtifact.getArtifactId()).append(":")
+                    .append(deliveryArtifact.getExtension());
+        if(deliveryArtifact.getClassifier() != null) {
+            message.append(":").append(deliveryArtifact.getClassifier());
+        }
+        message.append(" that you want to deliver :");
+        String defaultReply;
+        if(deliveryArtifact.getVersion() != null) {
+            defaultReply = deliveryArtifact.getVersion();
+        } else {
+            defaultReply = mojo.getProjectVersion();
+        }
+        deliveryArtifact.setVersion(mojo.getPrompter().prompt(message.toString(),defaultReply));
     }
 
     private List<File> resolveFileset () {

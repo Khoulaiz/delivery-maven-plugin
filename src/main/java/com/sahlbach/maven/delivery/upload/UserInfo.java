@@ -53,7 +53,7 @@ public class UserInfo implements com.jcraft.jsch.UserInfo {
     public boolean promptPassword (String message) {
         if(password == null && prompter != null) {
             try {
-                password = prompter.prompt(message);
+                password = prompter.promptForPassword(message);
             } catch (PrompterException e) {
                 logger.error(e);
             }
@@ -64,7 +64,7 @@ public class UserInfo implements com.jcraft.jsch.UserInfo {
     public boolean promptPassphrase (String message) {
         if(passphrase == null && prompter != null) {
             try {
-                passphrase = prompter.prompt(message);
+                passphrase = prompter.promptForPassword(message);
             } catch (PrompterException e) {
                 logger.error(e);
             }
