@@ -44,6 +44,17 @@ public class Delivery {
      */
     private List<Job> jobs;
 
+    /**
+     * creates a merged version of two deliveries.
+     * jobs are deeply merged
+     * @param defaultDelivery delivers the base values of the delivery
+     * @param localDelivery delivers the overwritten values of the delivery
+     * @return merged version
+     */
+    public static Delivery mergeDefaultAndLocal(Delivery defaultDelivery, Delivery localDelivery) {
+        return null;  //Todo: Implement
+    }
+
     public String getId () {
         return id;
     }

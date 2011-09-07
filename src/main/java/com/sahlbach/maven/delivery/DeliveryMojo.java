@@ -18,6 +18,8 @@ package com.sahlbach.maven.delivery;
 
 import java.util.*;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Maps;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -52,6 +54,12 @@ public class DeliveryMojo extends AbstractMojo {
      * @required
      */
     private List<Delivery> deliveries = Collections.emptyList();
+
+    /**
+     * List of default deliveries of this mojo (they can be defined fully or partially in the parent pom)
+     * @parameter
+     */
+    private List<Delivery> deliveryManagement = Collections.emptyList();
 
     /**
      * comma separated list of jobs to execute
@@ -110,20 +118,24 @@ public class DeliveryMojo extends AbstractMojo {
             return;
         }
 
+        checkDeliveryDefinitionConsistency();
+
+        List<Delivery> mergedDeliveries = mergeDeliveries();
+
         Set<String> deliveriesToExecute = new HashSet<String>();
 
         if(deliveryIds != null) {
-            int enteredDeliveries = cleanSelection(deliveriesToExecute, deliveryIds);
+            int enteredDeliveries = cleanSelection(deliveriesToExecute, deliveryIds, mergedDeliveries);
             if(enteredDeliveries != deliveriesToExecute.size())
                 throw new MojoFailureException("Delivery interrupted, ambiguous list of IDs in 'delivery.ids' given");
 
-        } else if(deliveries.size() == 1) {
-            deliveriesToExecute.add(deliveries.get(0).getId());
+        } else if(mergedDeliveries.size() == 1) {
+            deliveriesToExecute.add(mergedDeliveries.get(0).getId());
 
         } else if(interactiveMode) {
             try {
                 StringBuilder prompt = new StringBuilder("Enter comma separated list of deliveryIDs to execute. Available deliveries are:\n");
-                for (Delivery delivery : deliveries) {
+                for (Delivery delivery : mergedDeliveries) {
                     prompt.append("* ").append(delivery.getId());
                     if(delivery.getDescription() != null)
                         prompt.append(" (").append(delivery.getDescription()).append(")").append("\n");
@@ -136,7 +148,7 @@ public class DeliveryMojo extends AbstractMojo {
                     if(prompted.length() == 0)
                         throw new MojoFailureException("Delivery interrupted, empty prompt.");
 
-                    int selected = cleanSelection(deliveriesToExecute, prompted);
+                    int selected = cleanSelection(deliveriesToExecute, prompted, mergedDeliveries);
                     if(deliveriesToExecute.size() != selected) {
                         deliveriesToExecute.clear();
                     }
@@ -148,7 +160,7 @@ public class DeliveryMojo extends AbstractMojo {
             throw new MojoFailureException("You need to define a comma separated list of delivery IDs in 'delivery.ids' to execute");
         }
 
-        for (Delivery delivery : deliveries) {
+        for (Delivery delivery : mergedDeliveries) {
 
             if(deliveriesToExecute.contains(delivery.getId())) {
 
@@ -159,11 +171,74 @@ public class DeliveryMojo extends AbstractMojo {
         }
     }
 
-    private int cleanSelection(Set<String> deliveriesToExecute, String prompted) {
+    /**
+     * merges deliveryManagement deliveries with local deliveries
+     * the resulting merge should contain a merge of all delivery definition. local definitions with same ids should overwrite the data of deliveryManagement
+     * @return merged list of deliveries
+     */
+    private List<Delivery> mergeDeliveries() {
+        List<Delivery> mergedList = new ArrayList<Delivery>(deliveryManagement.size()+deliveries.size());
+        Map<String,Delivery> deliveriesMap = Maps.uniqueIndex(deliveries,new Function<Delivery, String>() {
+            @Override
+            public String apply(Delivery input) {
+                return input.getId();
+            }
+        });
+        for (Delivery delivery : deliveryManagement) {
+            Delivery localDelivery = deliveriesMap.get(delivery.getId());
+            if(localDelivery != null)
+                mergedList.add(Delivery.mergeDefaultAndLocal(delivery,localDelivery));
+            else
+                mergedList.add(delivery);
+        }
+        return mergedList;
+    }
+
+    /**
+     * checks for consistency in delivery and job definition. each delivery id has to be unique per collection. each job id has to be unique within a delivery
+     * @throws MojoExecutionException in case of inconsistencies
+     */
+    private void checkDeliveryDefinitionConsistency() throws MojoExecutionException {
+
+        List<String> seenIds = new ArrayList<String>(deliveryManagement.size());
+
+        for (Delivery delivery : deliveryManagement) {
+            if(seenIds.contains(delivery.getId())) {
+                throw new MojoExecutionException("Duplicate delivery id "+delivery.getId()+" in deliveryManagement definition");
+            } else {
+                seenIds.add(delivery.getId());
+                checkJobDefinitionConsistency(delivery);
+            }
+        }
+        seenIds = new ArrayList<String>(deliveries.size());
+
+        for (Delivery delivery : deliveries) {
+            if(seenIds.contains(delivery.getId())) {
+                throw new MojoExecutionException("Duplicate delivery id "+delivery.getId()+" in deliveries definition");
+            } else {
+                seenIds.add(delivery.getId());
+                checkJobDefinitionConsistency(delivery);
+            }
+        }
+    }
+
+    private void checkJobDefinitionConsistency(Delivery delivery) throws MojoExecutionException {
+        List<String> seenIds = new ArrayList<String>(delivery.getJobs().size());
+        for (Job job : delivery.getJobs()) {
+            if(job.getId() != null && seenIds.contains(job.getId())) {
+                throw new MojoExecutionException("Duplicate job id "+job.getId()+" in delivery "+(delivery.getId() == null ? "<no id defined>" : delivery.getId()));
+            } else {
+                if(job.getId() != null)
+                    seenIds.add(job.getId());
+            }
+        }
+    }
+
+    private static int cleanSelection(Set<String> deliveriesToExecute, String prompted, List<Delivery> myDeliveries) {
         deliveriesToExecute.clear();
         String[] selected = prompted.split(",");
         for (String select : selected) {
-            for (Delivery delivery : deliveries) {
+            for (Delivery delivery : myDeliveries) {
                 if(select.trim().equalsIgnoreCase(delivery.getId().trim())) {
                     deliveriesToExecute.add(delivery.getId());
                     break;
@@ -235,5 +310,13 @@ public class DeliveryMojo extends AbstractMojo {
 
     public String getProjectVersion() {
         return projectVersion;
+    }
+
+    public List<Delivery> getDeliveryManagement() {
+        return deliveryManagement;
+    }
+
+    public void setDeliveryManagement(List<Delivery> deliveryManagement) {
+        this.deliveryManagement = deliveryManagement;
     }
 }

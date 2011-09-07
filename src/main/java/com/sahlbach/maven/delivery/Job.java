@@ -27,14 +27,62 @@ import org.apache.maven.plugin.MojoFailureException;
 public class Job {
 
     /**
+     * Allows referencing and overwriting job data defined in dependencyManagement
+     * data of local jobs having the same job id as jobs defined in dependencyManagement is overwritten by the local data
+     * id has to be unique within one delivery definition
+     * @parameter
+     */
+    private String id = null;
+
+    /**
+     * Execution order of the job. Jobs are executed in the order of this number, lower numbers first.
+     * In case of this order number is not set, jobs are executed in the order they are define,
+     * default jobs are executed first, then local jobs.
+     * @parameter
+     */
+    private Integer order = null;
+
+    /**
      * @parameter
      */
     private Upload upload;
 
     /**
-     * @parameter 
+     * @parameter
      */
     private Exec exec;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public Integer getOrder() {
+        return order;
+    }
+
+    public void setOrder(Integer order) {
+        this.order = order;
+    }
+
+    public Upload getUpload() {
+        return upload;
+    }
+
+    public void setUpload(Upload upload) {
+        this.upload = upload;
+    }
+
+    public Exec getExec() {
+        return exec;
+    }
+
+    public void setExec(Exec exec) {
+        this.exec = exec;
+    }
 
     public void execute(DeliveryMojo mojo) throws MojoExecutionException, MojoFailureException {
         if(upload != null && exec != null)
