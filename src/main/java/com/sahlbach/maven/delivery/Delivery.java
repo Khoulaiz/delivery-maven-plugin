@@ -16,7 +16,13 @@
 
 package com.sahlbach.maven.delivery;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import org.apache.maven.plugin.MojoExecutionException;
 
 /**
  * @author Andreas Sahlbach
@@ -42,17 +48,38 @@ public class Delivery {
      * ordered list of DeliveryJobs for this Delivery
      * @parameter
      */
-    private List<Job> jobs;
+    private List<Job> jobs = Collections.emptyList();
 
     /**
      * creates a merged version of two deliveries.
      * jobs are deeply merged
      * @param defaultDelivery delivers the base values of the delivery
-     * @param localDelivery delivers the overwritten values of the delivery
-     * @return merged version
+     * @param toMerge delivers the overwritten values of the delivery
+     * @throws org.apache.maven.plugin.MojoExecutionException in case of merge conflicts
      */
-    public static Delivery mergeDefaultAndLocal(Delivery defaultDelivery, Delivery localDelivery) {
-        return null;  //Todo: Implement
+    public Delivery mergeWith(Delivery toMerge) throws MojoExecutionException {
+        setId(toMerge.getId());
+        if(toMerge.getDescription() != null)
+            setDescription(toMerge.getDescription());
+        Map<String,Job> mappedJobs = Maps.newHashMapWithExpectedSize(getJobs().size() + toMerge.getJobs().size());
+        List<Job> resultJobs = Lists.newArrayListWithCapacity(getJobs().size() + toMerge.getJobs().size());
+        for (Job job : getJobs()) {
+            Job newJob = new Job();
+            newJob.mergeWith(job);
+            if(newJob.getId() != null)
+                mappedJobs.put(newJob.getId(),newJob);
+            resultJobs.add(newJob);
+        }
+        for (Job job : toMerge.getJobs()) {
+            if((job.getId() != null) && mappedJobs.get(job.getId()) != null) {
+                Job existingJob = mappedJobs.get(job.getId());
+                existingJob.mergeWith(job);
+            } else {
+                resultJobs.add(new Job().mergeWith(job));
+            }
+        }
+        setJobs(resultJobs);
+        return this;
     }
 
     public String getId () {

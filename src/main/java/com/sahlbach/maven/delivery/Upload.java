@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 
+import com.google.common.collect.Lists;
 import com.sahlbach.maven.delivery.upload.Uploader;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -40,13 +41,8 @@ import org.sonatype.aether.util.artifact.DefaultArtifact;
  */
 public class Upload extends AbstractSshRemoteJob {
 
-    /**
-     * Type of upload
-     * @parameter default-value="scp"
-     * @required
-     */
-    private String type = "scp";
-
+    public final static String DEFAULT_FILE_MASK = "0644";
+    public final static String DEFAULT_TYPE = "scp";
     /**
      * target directory on the remote server
      * @parameter
@@ -72,9 +68,9 @@ public class Upload extends AbstractSshRemoteJob {
      * need to setup ssh so that the file mask fits automagically or you need to correct the mask
      * via ssh yourself with an exec job)
      *
-     * @parameter default-value="0644"
+     * @parameter
      */
-    private String fileMask = "0644";
+    private String fileMask;
 
     /**
      * Optional list of regexp to rename files during copy. The first regexp that matches will be used to rename the
@@ -83,10 +79,30 @@ public class Upload extends AbstractSshRemoteJob {
      */
     private List<RenameRegexp> renameRegexps;
 
+    public Upload mergeWith(Upload upload) throws MojoExecutionException {
+        super.mergeWith(upload);
+        if(upload.getTargetDir() != null)
+            setTargetDir(upload.getTargetDir());
+        if(upload.getFileset() != null)
+            setFileset(upload.getFileset());
+        if(upload.getFileMask() != null)
+            setFileMask(upload.getFileMask());
+        if(upload.getArtifacts() != null)
+            setArtifacts(upload.getArtifacts());
+        if(upload.getRenameRegexps() != null) {
+            if(getRenameRegexps() == null)
+                setRenameRegexps(Lists.newArrayList(upload.getRenameRegexps()));
+            else
+                getRenameRegexps().addAll(0,upload.getRenameRegexps());
+        }
+        return this;
+    }
+
     public void execute (DeliveryMojo mojo) throws MojoExecutionException, MojoFailureException {
+        String type = getType() != null ? getType() : DEFAULT_TYPE;
         Uploader uploader = Uploader.createUploader(type.toLowerCase(), mojo.getLog());
         if(uploader == null) {
-            throw new MojoExecutionException("Can't find Uploader of type " + type);
+            throw new MojoExecutionException("Can't find Uploader of type " + getType());
         }
         List<File> filesToUpload = resolveFileset();
 
@@ -184,10 +200,6 @@ public class Upload extends AbstractSshRemoteJob {
         return result;
     }
 
-    public String getType () {
-        return type;
-    }
-
     public String getTargetDir () {
         return targetDir;
     }
@@ -210,10 +222,6 @@ public class Upload extends AbstractSshRemoteJob {
 
     public void setRenameRegexps (List<RenameRegexp> renameRegexps) {
         this.renameRegexps = renameRegexps;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public void setTargetDir(String targetDir) {

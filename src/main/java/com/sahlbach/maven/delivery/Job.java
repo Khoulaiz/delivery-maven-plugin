@@ -92,4 +92,27 @@ public class Job {
         else
             exec.execute(mojo);
     }
+
+    /**
+     * let the given job overwrite all values, use own values as fallback
+     * @param toMerge overwriting job definition
+     * @throws org.apache.maven.plugin.MojoExecutionException in case of incompatible jobs to merge
+     */
+    public Job mergeWith(Job toMerge) throws MojoExecutionException {
+        if(toMerge.getOrder() != null)
+            setOrder(toMerge.getOrder());
+        if((upload != null && toMerge.getExec() != null) || (exec != null && toMerge.getUpload() != null))
+            throw new MojoExecutionException("Jobs must be from same type (either upload or exec)");
+        if(toMerge.getUpload() != null) {
+            if(upload == null)
+                upload = new Upload();
+            upload.mergeWith(toMerge.getUpload());
+        }
+        if(toMerge.getExec() != null) {
+            if(exec == null)
+                exec = new Exec();
+            exec.mergeWith(toMerge.getExec());
+        }
+        return this;
+    }
 }

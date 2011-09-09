@@ -27,7 +27,7 @@ public abstract class AbstractRemoteJob {
      * port of the target server
      * @parameter
      */
-    private int port;
+    private int port = 0;
 
     /**
      * remote username to use to login
@@ -40,6 +40,18 @@ public abstract class AbstractRemoteJob {
      * @parameter
      */
     private String userPassword;
+
+    public AbstractRemoteJob mergeWith(AbstractRemoteJob remoteJob) {
+        if(remoteJob.getServer() != null)
+            server = remoteJob.getServer();
+        if(remoteJob.getPort() != 0)
+            port = remoteJob.getPort();
+        if(remoteJob.getUsername() != null)
+            username = remoteJob.getUsername();
+        if(remoteJob.getUserPassword() != null)
+            userPassword = remoteJob.getUserPassword();
+        return this;
+    }
 
     public String getServer () {
         return server;
@@ -69,9 +81,8 @@ public abstract class AbstractRemoteJob {
         return userPassword;
     }
 
+
     public void setUserPassword (String userPassword) {
         this.userPassword = userPassword;
     }
-
-
 }

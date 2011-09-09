@@ -39,7 +39,7 @@
     <mavenVersion>3.0.3</mavenVersion>
     <aetherVersion>1.12</aetherVersion>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <skipTest>false</skipTest>
+    <skipTests>false</skipTests>
   </properties>
   <developers>
     <developer>
@@ -245,6 +245,7 @@
             <pomInclude>**/pom-*.xml</pomInclude>
           </pomIncludes>
           <localRepositoryPath>target/local-repo</localRepositoryPath>
+          <ignoreFailures>${skipTests}</ignoreFailures>
         </configuration>
         <executions>
           <execution>

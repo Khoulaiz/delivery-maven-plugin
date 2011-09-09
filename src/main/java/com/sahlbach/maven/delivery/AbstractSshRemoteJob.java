@@ -18,6 +18,8 @@ package com.sahlbach.maven.delivery;
 
 import java.io.File;
 
+import org.apache.maven.plugin.MojoExecutionException;
+
 public class AbstractSshRemoteJob extends AbstractRemoteJob {
 
     /**
@@ -37,6 +39,27 @@ public class AbstractSshRemoteJob extends AbstractRemoteJob {
      * password to use to unlock keyfile
      */
     private String keyPassword;
+    /**
+     * Type of upload
+     * @parameter
+     * @required
+     */
+    private String type;
+
+    public AbstractSshRemoteJob mergeWith(AbstractSshRemoteJob remoteJob) throws MojoExecutionException {
+        super.mergeWith(remoteJob);
+        if(type != null && (remoteJob.getType() != null) && !type.equals(remoteJob.getType()))
+            throw new MojoExecutionException("Remote Jobs must be from same type");
+        if(remoteJob.getType() != null)
+            type = remoteJob.getType();
+        if(remoteJob.getExecutable() != null)
+            setExecutable(remoteJob.getExecutable());
+        if(remoteJob.getKeyfile() != null)
+            setKeyfile(remoteJob.getKeyfile());
+        if(remoteJob.getKeyPassword() != null)
+            setKeyPassword(remoteJob.getKeyPassword());
+        return this;
+    }
 
     public String getExecutable () {
         return executable;
@@ -62,4 +85,11 @@ public class AbstractSshRemoteJob extends AbstractRemoteJob {
         this.keyPassword = keyPassword;
     }
 
+    public String getType () {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
 }

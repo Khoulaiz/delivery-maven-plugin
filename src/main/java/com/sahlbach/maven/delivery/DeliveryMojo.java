@@ -18,7 +18,7 @@ package com.sahlbach.maven.delivery;
 
 import java.util.*;
 
-import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -111,6 +111,7 @@ public class DeliveryMojo extends AbstractMojo {
      */
     private String projectVersion;
 
+    @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
 
         if(skip) {
@@ -175,23 +176,24 @@ public class DeliveryMojo extends AbstractMojo {
      * merges deliveryManagement deliveries with local deliveries
      * the resulting merge should contain a merge of all delivery definition. local definitions with same ids should overwrite the data of deliveryManagement
      * @return merged list of deliveries
+     * @throws org.apache.maven.plugin.MojoExecutionException in case of merge conflicts
      */
-    private List<Delivery> mergeDeliveries() {
-        List<Delivery> mergedList = new ArrayList<Delivery>(deliveryManagement.size()+deliveries.size());
-        Map<String,Delivery> deliveriesMap = Maps.uniqueIndex(deliveries,new Function<Delivery, String>() {
-            @Override
-            public String apply(Delivery input) {
-                return input.getId();
-            }
-        });
-        for (Delivery delivery : deliveryManagement) {
-            Delivery localDelivery = deliveriesMap.get(delivery.getId());
-            if(localDelivery != null)
-                mergedList.add(Delivery.mergeDefaultAndLocal(delivery,localDelivery));
-            else
-                mergedList.add(delivery);
+    private List<Delivery> mergeDeliveries() throws MojoExecutionException {
+        Map<String,Delivery> mergedMap = Maps.newHashMapWithExpectedSize(deliveryManagement.size()+deliveries.size());
+
+        for (Delivery defaultDelivery : deliveryManagement) {
+            Delivery newDelivery = new Delivery().mergeWith(defaultDelivery);
+            mergedMap.put(newDelivery.getId(), newDelivery);
         }
-        return mergedList;
+
+        for (Delivery localDelivery : deliveries) {
+            Delivery defaultDelivery = mergedMap.get(localDelivery.getId());
+            if(defaultDelivery == null)
+                defaultDelivery = new Delivery();
+            defaultDelivery.mergeWith(localDelivery);
+            mergedMap.put(defaultDelivery.getId(),defaultDelivery);
+        }
+        return Lists.newArrayList(mergedMap.values());
     }
 
     /**

@@ -56,7 +56,8 @@ public class ScpUploader extends Uploader {
 
             for (Map.Entry<File, String> copyEntry : filesToUpload.entrySet()) {
                 getLogger().debug("Delivering file " + copyEntry.getKey().getAbsolutePath());
-                scp.put(copyEntry.getKey().getAbsolutePath(), upload.getTargetDir(), copyEntry.getValue(), upload.getFileMask());
+                scp.put(copyEntry.getKey().getAbsolutePath(), upload.getTargetDir(), copyEntry.getValue(),
+                        upload.getFileMask() == null ? Upload.DEFAULT_FILE_MASK : upload.getFileMask());
                 if (getLogger().isDebugEnabled()) {
                     getLogger().info("Delivered: " + copyEntry.getKey().getAbsolutePath() + " to " + upload.getServer() + ":"
                                      + upload.getTargetDir() + "/" + copyEntry.getValue());

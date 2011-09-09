@@ -29,13 +29,7 @@ import org.apache.maven.plugin.MojoFailureException;
  */
 public class Exec extends AbstractSshRemoteJob {
 
-    /**
-     * Type of upload
-     * @parameter default-value="ssh"
-     * @required
-     */
-    private String type = "ssh";
-
+    public final static String DEFAULT_TYPE = "ssh";
     /**
      * List of commands to execute
      * @parameter
@@ -51,19 +45,21 @@ public class Exec extends AbstractSshRemoteJob {
     private String commandSeparator = ";";
 
     public void execute (DeliveryMojo mojo) throws MojoExecutionException, MojoFailureException {
+        String type = getType() != null ? getType() : DEFAULT_TYPE;
         Executor executor = Executor.createExecutor(type.toLowerCase(), mojo.getLog());
         if(executor == null) {
-            throw new MojoExecutionException("Can't find Executor of type " + type);
+            throw new MojoExecutionException("Can't find Executor of type " + getType());
         }
         executor.execute(commands, this, mojo);
     }
 
-    public String getType () {
-        return type;
-    }
-
-    public void setType (String type) {
-        this.type = type;
+    public Exec mergeWith(Exec exec) throws MojoExecutionException {
+        super.mergeWith(exec);
+        if(exec.getCommands() != null)
+            setCommands(exec.getCommands());
+        if(exec.getCommandSeparator() != null)
+            setCommandSeparator(exec.getCommandSeparator());
+        return this;
     }
 
     public List<String> getCommands () {
