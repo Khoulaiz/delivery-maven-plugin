@@ -21,7 +21,7 @@
   <artifactId>test</artifactId>
   <packaging>pom</packaging>
   <version>0.2-SNAPSHOT</version>
-  <name>test</name>
+  <name>test-1</name>
   <build>
     <plugins>
       <plugin>

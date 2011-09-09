@@ -99,6 +99,8 @@ public class Job {
      * @throws org.apache.maven.plugin.MojoExecutionException in case of incompatible jobs to merge
      */
     public Job mergeWith(Job toMerge) throws MojoExecutionException {
+        if(toMerge.getId() != null)
+            setId(toMerge.getId());
         if(toMerge.getOrder() != null)
             setOrder(toMerge.getOrder());
         if((upload != null && toMerge.getExec() != null) || (exec != null && toMerge.getUpload() != null))

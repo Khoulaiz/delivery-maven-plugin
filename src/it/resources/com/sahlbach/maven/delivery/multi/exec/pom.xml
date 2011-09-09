@@ -21,24 +21,27 @@
   <artifactId>test</artifactId>
   <packaging>pom</packaging>
   <version>0.2-SNAPSHOT</version>
-  <name>test-2</name>
+  <name>test-1</name>
+  <parent>
+    <groupId>com.sahlbach.maven</groupId>
+    <artifactId>parent-1</artifactId>
+    <version>0.2-SNAPSHOT</version>
+    <relativePath>../pom-1.xml</relativePath>
+  </parent>
   <build>
     <plugins>
       <plugin>
         <groupId>com.sahlbach.maven</groupId>
         <artifactId>delivery-maven-plugin</artifactId>
-        <version>0.2-SNAPSHOT</version>
         <configuration>
           <deliveries>
             <delivery>
-              <id>external</id>
-              <description>Tests the upload using an external ssh</description>
+              <id>internal</id>
+              <description>Tests the upload using an internal ssh</description>
               <jobs>
                 <job>
+                  <id>ssh-1</id>
                   <exec>
-                    <executable>ssh</executable>
-                    <type>ssh</type>
-                    <server>${testServer}</server>
                     <username>${testUser}</username>
                     <userPassword>${testPassword}</userPassword>
                     <commands>
