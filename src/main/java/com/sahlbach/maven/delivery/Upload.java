@@ -79,6 +79,12 @@ public class Upload extends AbstractSshRemoteJob {
      */
     private List<RenameRegexp> renameRegexps;
 
+    /**
+     * merge with the given upload object
+     * @param upload upload instance to merge in (overwrites local data)
+     * @return the merged instance (this) for call chaining
+     * @throws MojoExecutionException in case of merge conflicts
+     */
     public Upload mergeWith(Upload upload) throws MojoExecutionException {
         super.mergeWith(upload);
         if(upload.getTargetDir() != null)

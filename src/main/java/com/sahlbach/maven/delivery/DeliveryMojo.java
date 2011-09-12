@@ -126,6 +126,7 @@ public class DeliveryMojo extends AbstractMojo {
             getLog().info("No deliveries defined.");
             return;
         }
+
         Set<String> deliveriesToExecute = new HashSet<String>();
 
         if(deliveryIds != null) {
@@ -167,6 +168,8 @@ public class DeliveryMojo extends AbstractMojo {
         for (Delivery delivery : mergedDeliveries) {
 
             if(deliveriesToExecute.contains(delivery.getId())) {
+
+                delivery.orderJobs();
 
                 for (Job job : delivery.getJobs()) {
                     job.execute(this);

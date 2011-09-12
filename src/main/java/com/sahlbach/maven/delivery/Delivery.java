@@ -20,9 +20,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.codehaus.plexus.util.StringUtils;
 
 /**
  * @author Andreas Sahlbach
@@ -53,9 +58,9 @@ public class Delivery {
     /**
      * creates a merged version of two deliveries.
      * jobs are deeply merged
-     * @param defaultDelivery delivers the base values of the delivery
      * @param toMerge delivers the overwritten values of the delivery
      * @throws org.apache.maven.plugin.MojoExecutionException in case of merge conflicts
+     * @return the merged instance (this) for call chaining
      */
     public Delivery mergeWith(Delivery toMerge) throws MojoExecutionException {
         setId(toMerge.getId());
@@ -80,6 +85,69 @@ public class Delivery {
         }
         setJobs(resultJobs);
         return this;
+    }
+
+    /**
+     * orders the (merged) jobs according to their before and after attributes.
+     * @throws MojoExecutionException in case the order attributes contain errors (non existing job references)
+     */
+    public void orderJobs() throws MojoExecutionException {
+        List<Job> result = Lists.newArrayList(Iterables.filter(jobs, new Predicate<Job>() {
+            @Override
+            public boolean apply(Job input) {
+                return (StringUtils.isEmpty(input.getAfter()) && StringUtils.isEmpty(input.getBefore()));
+            }
+        }));
+        List<Job> toSort = Lists.newArrayList(Iterables.filter(jobs, new Predicate<Job>() {
+            @Override
+            public boolean apply(Job input) {
+                return (!StringUtils.isEmpty(input.getAfter()) || !StringUtils.isEmpty(input.getBefore()));
+            }
+        }));
+        boolean sortedAtLeaseOne;
+        do {
+            sortedAtLeaseOne = false;
+            for (Job job : toSort) {
+                if(!StringUtils.isEmpty(job.getAfter())) {
+                    int foundIndex = Iterables.indexOf(result, new FindJobViaJobId(job.getAfter()));
+                    if(foundIndex > -1) {
+                        result.add(foundIndex+1,job);
+                        sortedAtLeaseOne = true;
+                    }
+                } else {
+                    int foundIndex = Iterables.indexOf(result, new FindJobViaJobId(job.getBefore()));
+                    if(foundIndex > -1) {
+                        result.add(foundIndex,job);
+                        sortedAtLeaseOne = true;
+                    }
+                }
+                toSort.remove(job);
+            }
+        } while(sortedAtLeaseOne);
+        if(!toSort.isEmpty()) {
+            throw new MojoExecutionException("Could not resolve the before or after references of job: "
+                                             + Joiner.on(",").join(Lists.transform(toSort,new Function<Job, String>() {
+                @Override
+                public String apply(Job input) {
+                    return input.getId();
+                }
+            })));
+        }
+        jobs = result;
+    }
+
+    private class FindJobViaJobId implements Predicate<Job> {
+
+        private String toFind;
+
+        public FindJobViaJobId(String toFind) {
+            this.toFind = toFind;
+        }
+
+        @Override
+        public boolean apply(Job input) {
+            return toFind.equals(input.getId());
+        }
     }
 
     public String getId () {

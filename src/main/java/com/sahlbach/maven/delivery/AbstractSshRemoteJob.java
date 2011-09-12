@@ -46,18 +46,24 @@ public class AbstractSshRemoteJob extends AbstractRemoteJob {
      */
     private String type;
 
-    public AbstractSshRemoteJob mergeWith(AbstractSshRemoteJob remoteJob) throws MojoExecutionException {
-        super.mergeWith(remoteJob);
-        if(type != null && (remoteJob.getType() != null) && !type.equals(remoteJob.getType()))
+    /**
+     * merge with the given ssh remote job
+     * @param toMerge AbstractSshRemoteJob instance to merge with (overwrites local data)
+     * @return merged instance (this) for call chaining
+     * @throws MojoExecutionException in case of merge conflicts
+     */
+    public AbstractSshRemoteJob mergeWith(AbstractSshRemoteJob toMerge) throws MojoExecutionException {
+        super.mergeWith(toMerge);
+        if(type != null && (toMerge.getType() != null) && !type.equals(toMerge.getType()))
             throw new MojoExecutionException("Remote Jobs must be from same type");
-        if(remoteJob.getType() != null)
-            type = remoteJob.getType();
-        if(remoteJob.getExecutable() != null)
-            setExecutable(remoteJob.getExecutable());
-        if(remoteJob.getKeyfile() != null)
-            setKeyfile(remoteJob.getKeyfile());
-        if(remoteJob.getKeyPassword() != null)
-            setKeyPassword(remoteJob.getKeyPassword());
+        if(toMerge.getType() != null)
+            type = toMerge.getType();
+        if(toMerge.getExecutable() != null)
+            setExecutable(toMerge.getExecutable());
+        if(toMerge.getKeyfile() != null)
+            setKeyfile(toMerge.getKeyfile());
+        if(toMerge.getKeyPassword() != null)
+            setKeyPassword(toMerge.getKeyPassword());
         return this;
     }
 

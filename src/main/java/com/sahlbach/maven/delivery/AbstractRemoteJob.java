@@ -41,15 +41,20 @@ public abstract class AbstractRemoteJob {
      */
     private String userPassword;
 
-    public AbstractRemoteJob mergeWith(AbstractRemoteJob remoteJob) {
-        if(remoteJob.getServer() != null)
-            server = remoteJob.getServer();
-        if(remoteJob.getPort() != 0)
-            port = remoteJob.getPort();
-        if(remoteJob.getUsername() != null)
-            username = remoteJob.getUsername();
-        if(remoteJob.getUserPassword() != null)
-            userPassword = remoteJob.getUserPassword();
+    /**
+     * merge with the given remote job
+     * @param toMerge remoteJob instance to merge with (overwrites local data)
+     * @return merged instance (this) for call chaining
+     */
+    public AbstractRemoteJob mergeWith(AbstractRemoteJob toMerge) {
+        if(toMerge.getServer() != null)
+            server = toMerge.getServer();
+        if(toMerge.getPort() != 0)
+            port = toMerge.getPort();
+        if(toMerge.getUsername() != null)
+            username = toMerge.getUsername();
+        if(toMerge.getUserPassword() != null)
+            userPassword = toMerge.getUserPassword();
         return this;
     }
 

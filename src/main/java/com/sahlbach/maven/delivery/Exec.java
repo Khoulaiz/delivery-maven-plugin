@@ -53,12 +53,18 @@ public class Exec extends AbstractSshRemoteJob {
         executor.execute(commands, this, mojo);
     }
 
-    public Exec mergeWith(Exec exec) throws MojoExecutionException {
-        super.mergeWith(exec);
-        if(exec.getCommands() != null)
-            setCommands(exec.getCommands());
-        if(exec.getCommandSeparator() != null)
-            setCommandSeparator(exec.getCommandSeparator());
+    /**
+     * creates a merged version of an exec
+     * @param toMerge exec to merge with (overwrites the local data)
+     * @return the merged instance (this) for call chaining
+     * @throws MojoExecutionException in case of merge conflicts
+     */
+    public Exec mergeWith(Exec toMerge) throws MojoExecutionException {
+        super.mergeWith(toMerge);
+        if(toMerge.getCommands() != null)
+            setCommands(toMerge.getCommands());
+        if(toMerge.getCommandSeparator() != null)
+            setCommandSeparator(toMerge.getCommandSeparator());
         return this;
     }
 
