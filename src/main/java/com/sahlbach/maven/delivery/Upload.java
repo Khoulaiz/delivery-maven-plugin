@@ -17,10 +17,7 @@
 package com.sahlbach.maven.delivery;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 
 import com.google.common.collect.Lists;
@@ -77,7 +74,7 @@ public class Upload extends AbstractSshRemoteJob {
      * file. The file path is excluding of this operation and the regexp match attempt.
      * @parameter
      */
-    private List<RenameRegexp> renameRegexps;
+    private List<RenameRegexp> renameRegexps = Collections.emptyList();
 
     /**
      * merge with the given upload object
@@ -123,14 +120,17 @@ public class Upload extends AbstractSshRemoteJob {
     private Map<File,String> calculateTargetNames (List<File> filesToUpload) {
         Map<File,String> filesWithTargetNames = new HashMap<File, String>(filesToUpload.size());
         for (File file : filesToUpload) {
+            boolean renamed = false;
             for (RenameRegexp renameRegexp : renameRegexps) {
                 Matcher matcher = renameRegexp.getFromPattern().matcher(file.getName());
                 if(matcher.matches()) {
                     filesWithTargetNames.put(file,matcher.replaceAll(renameRegexp.getTo()));
+                    renamed = true;
                     break;
-                } else {
-                    filesWithTargetNames.put(file,file.getName());
                 }
+            }
+            if(!renamed) {
+                filesWithTargetNames.put(file,file.getName());
             }
         }
         return filesWithTargetNames;
