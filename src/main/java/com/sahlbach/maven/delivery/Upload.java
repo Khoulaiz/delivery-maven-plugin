@@ -16,10 +16,6 @@
 
 package com.sahlbach.maven.delivery;
 
-import java.io.File;
-import java.util.*;
-import java.util.regex.Matcher;
-
 import com.google.common.collect.Lists;
 import com.sahlbach.maven.delivery.upload.Uploader;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -30,6 +26,13 @@ import org.sonatype.aether.resolution.ArtifactRequest;
 import org.sonatype.aether.resolution.ArtifactResolutionException;
 import org.sonatype.aether.resolution.ArtifactResult;
 import org.sonatype.aether.util.artifact.DefaultArtifact;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
 
 /**
  * User: Andreas Sahlbach
@@ -74,7 +77,7 @@ public class Upload extends AbstractSshRemoteJob {
      * file. The file path is excluding of this operation and the regexp match attempt.
      * @parameter
      */
-    private List<RenameRegexp> renameRegexps = Collections.emptyList();
+    private List<RenameRegexp> renameRegexps = Lists.newArrayList();
 
     /**
      * merge with the given upload object
